@@ -425,6 +425,12 @@
     min-height:120px;
   }
   textarea#smsInput:focus{ outline:2px solid var(--ochre); outline-offset:1px; }
+  textarea#smsInput[readonly]{
+    cursor:default;
+    caret-color:transparent;
+    user-select:none;
+    -webkit-user-select:none;
+  }
 
   .parse-btn{
     width:100%;
@@ -727,13 +733,13 @@
 <div class="sheet" id="smsSheet">
   <div class="sheet-handle"></div>
   <h2>Nhập từ tin nhắn ngân hàng</h2>
-  <p class="hint-text">Dán nội dung tin nhắn/thông báo biến động số dư vào ô bên dưới — app sẽ tự động phân tích và lưu giao dịch thẳng vào sổ. Nếu đã sao chép sẵn trước khi mở, app cũng tự đọc và lưu luôn. Không cần bấm thêm giao dịch. Nếu dán nhiều tin nhắn cùng lúc, để cách nhau 1 dòng trống giữa mỗi tin.</p>
+  <p class="hint-text">Sao chép nội dung tin nhắn/thông báo biến động số dư rồi mở mục này — app sẽ tự đọc, phân tích và lưu thẳng vào sổ mà không bật bàn phím. Nếu chưa nhận được, chạm nút đọc lại bên dưới.</p>
 
   <div class="field">
-    <textarea id="smsInput" rows="6" placeholder="VD: TK 1234 phat sinh giao dich -85,000VND luc 12/08/2026 10:23. So du: 2,450,000VND. Noi dung: THANH TOAN GRABFOOD"></textarea>
+    <textarea id="smsInput" rows="6" readonly inputmode="none" aria-readonly="true" placeholder="Nội dung đã sao chép sẽ tự xuất hiện ở đây"></textarea>
   </div>
 
-  <button class="parse-btn" id="parseBtn">Thử phân tích lại</button>
+  <button class="parse-btn" id="parseBtn">Đọc lại nội dung đã sao chép</button>
 
   <div id="parsedResults"></div>
 </div>
@@ -1092,39 +1098,56 @@
     toastTimer = setTimeout(function(){ autoToast.classList.remove('show'); }, 2600);
   }
 
-  function tryAutoClipboard(token){
-    if(!navigator.clipboard || !navigator.clipboard.readText) return;
+  function showClipboardMessage(message){
+    parsedResultsEl.innerHTML = '<p class="parsed-empty-hint">' + message + '</p>';
+  }
+
+  function tryAutoClipboard(token, showUnavailable){
+    if(!navigator.clipboard || !navigator.clipboard.readText){
+      if(showUnavailable) showClipboardMessage('Trình duyệt chưa cho phép đọc clipboard. Hãy mở ứng dụng bằng đường dẫn HTTPS và thử lại.');
+      return;
+    }
     navigator.clipboard.readText().then(function(text){
-      if(token !== smsSessionToken || smsInput.value.trim() || !smsSheetEl.classList.contains('show')) return;
+      if(token !== smsSessionToken || !smsSheetEl.classList.contains('show')) return;
       if(text && extractAmount(text)){
         smsInput.value = text;
         runParse(text);
+      }else{
+        showClipboardMessage('Chưa tìm thấy giao dịch trong nội dung đã sao chép.');
       }
-    }).catch(function(){ /* không có quyền đọc clipboard hoặc trống - để người dùng tự dán */ });
+    }).catch(function(){
+      if(token === smsSessionToken && smsSheetEl.classList.contains('show')){
+        showClipboardMessage('Không thể đọc clipboard. Hãy cho phép quyền đọc nội dung đã sao chép rồi chạm nút thử lại.');
+      }
+    });
   }
 
   function openSmsSheet(){
+    if(document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
     var token = ++smsSessionToken;
     smsInput.value = '';
     parsedItems = [];
     parsedResultsEl.innerHTML = '';
     smsBackdrop.classList.add('show');
     smsSheetEl.classList.add('show');
-    tryAutoClipboard(token);
+    tryAutoClipboard(token, false);
   }
   function closeSmsSheet(){
     smsSessionToken++;
     smsInput.blur();
+    if(document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
     smsBackdrop.classList.remove('show');
     smsSheetEl.classList.remove('show');
   }
   smsBtn.addEventListener('click', openSmsSheet);
   smsBackdrop.addEventListener('click', closeSmsSheet);
 
-  smsInput.addEventListener('paste', function(){
-    smsSessionToken++;
+  smsInput.addEventListener('focus', function(){
     smsInput.blur();
-    setTimeout(function(){ runParse(smsInput.value); }, 30);
+  });
+  smsInput.addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    smsInput.blur();
   });
 
   function catOptions(type, selected){
@@ -1160,7 +1183,12 @@
   }
 
   parseBtn.addEventListener('click', function(){
-    runParse(smsInput.value);
+    if(document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
+    var token = ++smsSessionToken;
+    smsInput.value = '';
+    parsedItems = [];
+    parsedResultsEl.innerHTML = '';
+    tryAutoClipboard(token, true);
   });
 
   parsedResultsEl.addEventListener('click', function(e){

@@ -659,9 +659,9 @@
 
 <div class="app">
   <header>
-    <p class="app-title serif">Sổ Thu Chi</p>
+    <p class="app-title serif" id="appTitle">Sổ Thu Chi</p>
     <div class="balance-card">
-      <p class="balance-label">Số dư hiện tại</p>
+      <p class="balance-label">Số dư tháng này</p>
       <p class="balance-amount tnum" id="balanceAmount">0 đ</p>
       <div class="balance-stats">
         <div class="stat-pill">
@@ -674,7 +674,7 @@
         </div>
       </div>
     </div>
-    <button class="month-history-link" id="openMonthSheet">Xem lịch sử theo tháng ›</button>
+    <button class="month-history-link" id="openMonthSheet">Tổng kết &amp; lịch sử theo tháng ›</button>
   </header>
 
   <div id="monthBanner"></div>
@@ -805,15 +805,21 @@
 
   // ---------- Rendering ----------
   var listWrap = document.getElementById('listWrap');
+  var appTitleEl = document.getElementById('appTitle');
   var balanceAmount = document.getElementById('balanceAmount');
   var totalInEl = document.getElementById('totalIn');
   var totalOutEl = document.getElementById('totalOut');
 
   function render(){
+    var currentKey = todayStr().slice(0,7);
+    var currentList = state.list.filter(function(t){
+      return t.date && t.date.slice(0,7) === currentKey;
+    });
     var totalIn = 0, totalOut = 0;
-    state.list.forEach(function(t){
+    currentList.forEach(function(t){
       if(t.type === 'in') totalIn += t.amount; else totalOut += t.amount;
     });
+    appTitleEl.textContent = 'Sổ Thu Chi · Tháng ' + parseInt(currentKey.slice(5,7), 10) + '/' + currentKey.slice(0,4);
     balanceAmount.textContent = fmt(totalIn - totalOut);
     totalInEl.textContent = fmt(totalIn);
     totalOutEl.textContent = fmt(totalOut);
@@ -821,10 +827,10 @@
     var emptyHtml =
       '<div class="empty-state">' +
       '<svg width="52" height="52" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="' + getComputedStyle(document.documentElement).getPropertyValue('--ink-soft') + '" stroke-width="1.6" stroke-linecap="round"/></svg>' +
-      '<p>Chưa có giao dịch nào.<br>Thêm khoản thu hoặc chi đầu tiên của bạn.</p>' +
+      '<p>Chưa có giao dịch trong tháng này.<br>Thêm khoản thu hoặc chi đầu tiên của tháng mới.</p>' +
       '</div>';
 
-    listWrap.innerHTML = buildDayGroupsHTML(state.list, emptyHtml);
+    listWrap.innerHTML = buildDayGroupsHTML(currentList, emptyHtml);
   }
 
   function buildDayGroupsHTML(list, emptyHtml){
@@ -1459,9 +1465,16 @@
     var LAST_KEY = 'soChiTieu_lastSeenMonth_v1';
     var current = todayStr().slice(0,7);
     var last = localStorage.getItem(LAST_KEY);
+    var months = getMonthsSummary();
+    var summaryKey = null;
     if(last && last !== current){
-      var months = getMonthsSummary();
-      var m = months.find(function(x){ return x.key === last; });
+      summaryKey = last;
+    }else if(!last){
+      var latestClosed = months.find(function(x){ return x.key < current; });
+      if(latestClosed) summaryKey = latestClosed.key;
+    }
+    if(summaryKey){
+      var m = months.find(function(x){ return x.key === summaryKey; });
       if(m) showMonthBanner(m);
     }
     localStorage.setItem(LAST_KEY, current);
@@ -1473,8 +1486,8 @@
       '<div class="month-banner-card">' +
         '<button class="month-banner-close" id="monthBannerClose" aria-label="Đóng">×</button>' +
         '<p class="month-banner-title serif">' + monthLabel(m.key) + ' đã kết thúc</p>' +
-        '<p class="month-banner-line">Thu <b class="tnum">' + m.in.toLocaleString('vi-VN') + ' đ</b> · Chi <b class="tnum">' + m.out.toLocaleString('vi-VN') + ' đ</b> · Dư <b class="tnum">' + (m.net >= 0 ? '+' : '') + m.net.toLocaleString('vi-VN') + ' đ</b></p>' +
-        '<button class="month-banner-view" id="monthBannerView">Xem chi tiết tháng này</button>' +
+        '<p class="month-banner-line">Thu <b class="tnum">' + m.in.toLocaleString('vi-VN') + ' đ</b> · Chi <b class="tnum">' + m.out.toLocaleString('vi-VN') + ' đ</b> · Dư <b class="tnum">' + (m.net >= 0 ? '+' : '') + m.net.toLocaleString('vi-VN') + ' đ</b><br>Trang chính đã tự làm mới để theo dõi ' + monthLabel(todayStr().slice(0,7)) + '.</p>' +
+        '<button class="month-banner-view" id="monthBannerView">Xem bản tổng kết</button>' +
       '</div>';
     var closeBtn = document.getElementById('monthBannerClose');
     var viewBtn = document.getElementById('monthBannerView');
@@ -1487,6 +1500,20 @@
   }
 
   checkMonthRollover();
+
+  // Nếu ứng dụng vẫn mở khi bước sang tháng mới, tự tổng kết và đổi kỳ theo dõi.
+  var activeMonthKey = todayStr().slice(0,7);
+  function refreshMonthBoundary(){
+    var current = todayStr().slice(0,7);
+    if(current === activeMonthKey) return;
+    activeMonthKey = current;
+    checkMonthRollover();
+    render();
+  }
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden) refreshMonthBoundary();
+  });
+  setInterval(refreshMonthBoundary, 60000);
 
   // ---------- Inline "installable" setup: icon + manifest ----------
   (function setupHomeScreen(){

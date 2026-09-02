@@ -524,20 +524,116 @@
   .auto-toast.show{ opacity:1; transform:translate(-50%, 0); }
   .auto-toast.warn{ background:var(--ochre); color:var(--ink); }
 
-  .month-history-link{
-    display:block;
-    width:100%;
-    text-align:center;
-    background:transparent;
-    border:none;
-    color:var(--ink-soft);
-    font-family:inherit;
-    font-size:0.85rem;
-    font-weight:600;
-    padding:0.8rem 0 0.2rem;
-    cursor:pointer;
+  .quick-actions{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    gap:0.65rem;
+    margin-top:0.75rem;
   }
-  .month-history-link:active{ color:var(--forest); }
+  .quick-action{
+    min-width:0;
+    min-height:74px;
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink);
+    border-radius:16px;
+    padding:0.7rem 0.75rem;
+    display:flex;
+    align-items:center;
+    gap:0.65rem;
+    font-family:inherit;
+    text-align:left;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(42,42,34,0.06);
+  }
+  .quick-action:active{ transform:scale(0.98); background:var(--forest-soft); }
+  .quick-action:focus-visible{ outline:2px solid var(--ochre); outline-offset:2px; }
+  .quick-action-icon{
+    width:38px;
+    height:38px;
+    border-radius:12px;
+    flex:0 0 38px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--forest-soft);
+    color:var(--forest);
+  }
+  .quick-action.funds .quick-action-icon{ background:#FBECEF; color:#C23E58; }
+  .quick-action-copy{ min-width:0; display:block; }
+  .quick-action-title{ display:block; font-size:0.82rem; font-weight:700; line-height:1.25; }
+  .quick-action-sub{
+    display:block;
+    color:var(--ink-soft);
+    font-size:0.68rem;
+    line-height:1.3;
+    margin-top:0.18rem;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .funds-source{
+    background:var(--forest);
+    color:var(--paper);
+    border-radius:16px;
+    padding:1rem 1.05rem;
+    margin-bottom:0.9rem;
+  }
+  .funds-source-label{ font-size:0.76rem; opacity:0.78; margin:0 0 0.25rem; }
+  .funds-source-amount{ font-size:1.6rem; font-weight:700; margin:0; }
+  .funds-source-month{ font-size:0.78rem; opacity:0.8; margin:0.3rem 0 0; }
+  .funds-list{ display:flex; flex-direction:column; gap:0.65rem; }
+  .fund-item{
+    --fund:#777;
+    --fund-soft:#f1f1ed;
+    display:grid;
+    grid-template-columns:46px minmax(0,1fr) auto;
+    align-items:center;
+    gap:0.75rem;
+    background:linear-gradient(90deg, var(--fund-soft), var(--card) 42%);
+    border:1px solid var(--line);
+    border-left:5px solid var(--fund);
+    border-radius:14px;
+    padding:0.75rem 0.8rem;
+  }
+  .fund-item.ffa{ --fund:#3478D4; --fund-soft:#E9F2FC; }
+  .fund-item.ltss{ --fund:#5E9BE6; --fund-soft:#EDF4FD; }
+  .fund-item.edu{ --fund:#D7475F; --fund-soft:#FBECEF; }
+  .fund-item.nec{ --fund:#C98655; --fund-soft:#FAEFE7; }
+  .fund-item.play{ --fund:#EF675C; --fund-soft:#FCEAE8; }
+  .fund-item.give{ --fund:#6FAE4B; --fund-soft:#EDF6E8; }
+  .fund-app-badge{
+    width:46px;
+    height:46px;
+    border-radius:13px;
+    background:var(--fund);
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:0.68rem;
+    font-weight:800;
+    letter-spacing:-0.02em;
+    text-align:center;
+  }
+  .fund-name{ font-size:0.88rem; font-weight:700; margin:0; }
+  .fund-meta{ font-size:0.7rem; color:var(--ink-soft); margin:0.15rem 0 0; line-height:1.35; }
+  .fund-amount{ text-align:right; white-space:nowrap; }
+  .fund-amount strong{ display:block; color:var(--fund); font-size:0.95rem; }
+  .fund-amount span{ display:block; color:var(--ink-soft); font-size:0.7rem; margin-top:0.1rem; }
+  .funds-remainder{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:0.8rem;
+    padding:0.75rem 0.85rem;
+    background:var(--card);
+    border:1px dashed var(--line);
+    border-radius:12px;
+    font-size:0.82rem;
+  }
+  .funds-note{ color:var(--ink-soft); font-size:0.72rem; line-height:1.5; margin:0.8rem 0 0; }
 
   .month-banner-card{
     margin:0 1.25rem 1rem;
@@ -650,6 +746,291 @@
   .month-mini-stats .stat-pill .lbl{ color:var(--ink-soft); }
   .month-mini-stats .stat-pill .val{ color:var(--ink); }
 
+  /* Professional mobile redesign */
+  :root{
+    --paper:#F3F7F5;
+    --card:#FFFFFF;
+    --ink:#18231F;
+    --ink-soft:#6D7873;
+    --forest:#155C49;
+    --forest-soft:#E6F2ED;
+    --rust:#C84C43;
+    --rust-soft:#FCECE9;
+    --ochre:#D69B45;
+    --line:#DDE7E2;
+    --shadow:0 14px 36px rgba(20,65,52,0.12);
+  }
+
+  html,body{ background:var(--paper); }
+  body{
+    background-image:
+      radial-gradient(circle at 50% -80px, rgba(72,150,122,0.18), transparent 330px),
+      linear-gradient(180deg, #EEF5F1 0, var(--paper) 360px);
+    background-size:auto;
+    background-position:0 0;
+  }
+  .app{ max-width:480px; padding-bottom:7.8rem; }
+  header{ padding:calc(1rem + env(safe-area-inset-top)) 1rem 0.85rem; }
+
+  .app-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    margin-bottom:0.9rem;
+  }
+  .app-eyebrow{
+    display:block;
+    color:var(--forest);
+    font-size:0.62rem;
+    font-weight:800;
+    letter-spacing:0.12em;
+    margin-bottom:0.15rem;
+  }
+  .app-title{
+    color:var(--ink);
+    font-family:'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size:1.32rem;
+    font-weight:800;
+    letter-spacing:-0.035em;
+    margin:0;
+  }
+  .period-chip{
+    flex-shrink:0;
+    border:1px solid rgba(21,92,73,0.12);
+    background:rgba(255,255,255,0.76);
+    color:var(--forest);
+    border-radius:999px;
+    padding:0.5rem 0.7rem;
+    font-size:0.72rem;
+    font-weight:700;
+    box-shadow:0 4px 14px rgba(20,65,52,0.06);
+  }
+
+  .balance-card{
+    background:linear-gradient(145deg, #17634F 0%, #0E4638 100%);
+    border-radius:24px;
+    padding:1.25rem 1.2rem 1.1rem;
+    box-shadow:0 18px 36px rgba(14,70,56,0.22);
+  }
+  .balance-card::after{
+    right:-28px;
+    top:-52px;
+    width:170px;
+    height:170px;
+    background:rgba(255,255,255,0.055);
+  }
+  .balance-label{
+    font-size:0.74rem;
+    font-weight:500;
+    opacity:0.78;
+    margin-bottom:0.25rem;
+  }
+  .balance-amount{
+    font-size:2.05rem;
+    font-weight:700;
+    letter-spacing:-0.04em;
+    margin-bottom:1rem;
+  }
+  .balance-stats{ gap:0.65rem; }
+  .stat-pill{
+    background:rgba(255,255,255,0.105);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:14px;
+    padding:0.65rem 0.72rem;
+  }
+  .stat-pill .lbl{ font-size:0.68rem; margin-bottom:0.22rem; }
+  .stat-pill .val{ font-size:0.9rem; }
+
+  .quick-actions{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:0;
+    margin-top:0.78rem;
+    background:rgba(255,255,255,0.92);
+    border:1px solid var(--line);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 8px 24px rgba(24,35,31,0.06);
+  }
+  .quick-action{
+    min-height:68px;
+    padding:0.68rem 0.72rem;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+    gap:0.58rem;
+  }
+  .quick-action + .quick-action{ border-left:1px solid var(--line); }
+  .quick-action:active{ transform:none; background:var(--forest-soft); }
+  .quick-action-icon{
+    width:36px;
+    height:36px;
+    flex-basis:36px;
+    border-radius:11px;
+  }
+  .quick-action-title{ font-size:0.78rem; }
+  .quick-action-sub{ font-size:0.64rem; }
+
+  main{ padding:0.35rem 1rem 0; }
+  .section-heading{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:1rem;
+    padding:0.75rem 0.1rem 0.2rem;
+  }
+  .section-heading h2{
+    margin:0;
+    font-size:0.98rem;
+    font-weight:750;
+    letter-spacing:-0.02em;
+  }
+  .section-heading span{
+    color:var(--ink-soft);
+    font-size:0.7rem;
+    white-space:nowrap;
+  }
+  .day-group{ margin-bottom:0.35rem; }
+  .day-heading{
+    padding:0.85rem 0.12rem 0.45rem;
+    font-size:0.74rem;
+    font-weight:700;
+  }
+  .day-heading .day-total{ font-size:0.72rem; }
+  .txn{
+    min-height:66px;
+    border-radius:16px;
+    border:1px solid var(--line);
+    padding:0.72rem 0.7rem;
+    gap:0.68rem;
+    margin-bottom:0.5rem;
+    box-shadow:0 5px 18px rgba(24,35,31,0.045);
+  }
+  .txn-icon{
+    width:38px;
+    height:38px;
+    flex:0 0 38px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.15rem;
+    font-weight:700;
+  }
+  .txn-icon.in{ background:var(--forest-soft); color:var(--forest); }
+  .txn-icon.out{ background:var(--rust-soft); color:var(--rust); }
+  .txn-cat{ font-size:0.88rem; font-weight:700; margin-bottom:0.12rem; }
+  .txn-note{ font-size:0.72rem; }
+  .txn-amount{ font-size:0.88rem; }
+  .txn-del{ color:#9AA39F; padding:0.28rem; }
+
+  .empty-state{
+    margin-top:0.8rem;
+    padding:2.25rem 1.2rem;
+    background:rgba(255,255,255,0.72);
+    border:1px dashed #CFDBD5;
+    border-radius:20px;
+  }
+  .empty-state svg{ width:42px; height:42px; margin-bottom:0.65rem; }
+  .empty-state p{ font-size:0.82rem; }
+  .empty-state p strong{ display:block; color:var(--ink); font-size:0.92rem; margin-bottom:0.28rem; }
+  .empty-state p span{ display:block; }
+
+  .bottom-actions{
+    position:fixed;
+    left:50%;
+    bottom:0;
+    transform:translateX(-50%);
+    width:min(100%,480px);
+    display:grid;
+    grid-template-columns:0.95fr 1.15fr;
+    gap:0.65rem;
+    padding:0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom));
+    background:rgba(255,255,255,0.94);
+    border-top:1px solid rgba(210,222,216,0.92);
+    box-shadow:0 -12px 30px rgba(24,35,31,0.09);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    z-index:25;
+  }
+  .bottom-action{
+    min-height:50px;
+    border-radius:15px;
+    border:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:0.48rem;
+    font-family:inherit;
+    font-size:0.78rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .bottom-action.import{ background:var(--forest-soft); color:var(--forest); border-color:#CFE2D9; }
+  .bottom-action.add{
+    background:var(--forest);
+    color:white;
+    border-color:var(--forest);
+    box-shadow:0 8px 18px rgba(21,92,73,0.22);
+  }
+  .bottom-action:active{ transform:scale(0.98); }
+
+  .sheet-backdrop{
+    background:rgba(17,29,24,0.48);
+    backdrop-filter:blur(3px);
+    -webkit-backdrop-filter:blur(3px);
+  }
+  .sheet{
+    background:#FFFFFF;
+    border:1px solid var(--line);
+    border-bottom:0;
+    border-radius:26px 26px 0 0;
+    padding:1rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
+    max-height:92vh;
+    box-shadow:0 -18px 50px rgba(16,39,31,0.2);
+  }
+  .sheet-handle{ background:#CBD5D0; margin-bottom:0.9rem; }
+  .sheet h2{
+    font-family:'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size:1.15rem;
+    font-weight:800;
+    letter-spacing:-0.025em;
+    margin-bottom:1rem;
+  }
+  input,select,textarea#smsInput,.amount-input-wrap{
+    background:#F8FAF9;
+    border-color:var(--line);
+  }
+  .save-btn,.parse-btn{ min-height:50px; border-radius:15px; }
+
+  .funds-source{ background:linear-gradient(145deg, #17634F, #0E4638); border-radius:18px; }
+  .fund-item{
+    background:#FFFFFF;
+    border-radius:16px;
+    padding:0.72rem;
+    box-shadow:0 4px 14px rgba(24,35,31,0.04);
+  }
+  .month-row,.month-mini-stats .stat-pill{ background:#FFFFFF; border-color:var(--line); }
+  .month-banner-card{
+    margin:0 1rem 0.6rem;
+    border-radius:18px;
+    border-color:#E7C98E;
+    box-shadow:0 8px 24px rgba(104,76,26,0.08);
+  }
+  .auto-toast{ bottom:5.7rem; }
+
+  @media (max-width:360px){
+    .quick-action{ padding:0.62rem 0.55rem; gap:0.45rem; }
+    .quick-action-icon{ width:32px; height:32px; flex-basis:32px; }
+    .quick-action-title{ font-size:0.72rem; }
+    .bottom-action{ font-size:0.72rem; }
+    .fund-item{ grid-template-columns:40px minmax(0,1fr); }
+    .fund-app-badge{ width:40px; height:40px; border-radius:12px; }
+    .fund-amount{ grid-column:2; text-align:left; display:flex; gap:0.4rem; align-items:baseline; }
+  }
+
   @media (prefers-reduced-motion: reduce){
     *{ animation-duration:0.001s !important; transition-duration:0.001s !important; }
   }
@@ -659,7 +1040,13 @@
 
 <div class="app">
   <header>
-    <p class="app-title serif" id="appTitle">Sổ Thu Chi</p>
+    <div class="app-topbar">
+      <div>
+        <span class="app-eyebrow">QUẢN LÝ TÀI CHÍNH</span>
+        <p class="app-title" id="appTitle">Sổ Thu Chi</p>
+      </div>
+      <span class="period-chip" id="periodChip">Tháng này</span>
+    </div>
     <div class="balance-card">
       <p class="balance-label">Số dư tháng này</p>
       <p class="balance-amount tnum" id="balanceAmount">0 đ</p>
@@ -674,23 +1061,49 @@
         </div>
       </div>
     </div>
-    <button class="month-history-link" id="openMonthSheet">Tổng kết &amp; lịch sử theo tháng ›</button>
+    <div class="quick-actions">
+      <button class="quick-action" id="openMonthSheet" type="button">
+        <span class="quick-action-icon" aria-hidden="true">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2zM8 13h3M8 17h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="quick-action-copy">
+          <span class="quick-action-title">Tổng kết tháng</span>
+          <span class="quick-action-sub">Xem lại lịch sử</span>
+        </span>
+      </button>
+      <button class="quick-action funds" id="openFundsSheet" type="button">
+        <span class="quick-action-icon" aria-hidden="true">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/></svg>
+        </span>
+        <span class="quick-action-copy">
+          <span class="quick-action-title">6 quỹ tài chính</span>
+          <span class="quick-action-sub" id="fundsIncomePreview">Chưa nhận diện tiền lương</span>
+        </span>
+      </button>
+    </div>
   </header>
 
   <div id="monthBanner"></div>
 
-  <main id="listWrap">
-    <!-- filled by JS -->
+  <main>
+    <div class="section-heading">
+      <h2>Giao dịch tháng này</h2>
+      <span id="transactionCount">0 giao dịch</span>
+    </div>
+    <div id="listWrap"><!-- filled by JS --></div>
   </main>
 </div>
 
-<button class="fab-secondary" id="openSmsSheet" aria-label="Nhập từ tin nhắn ngân hàng">
-  <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M8 5h13M8 12h13M8 19h13M3 5h.01M3 12h.01M3 19h.01" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>
-</button>
-
-<button class="fab" id="openSheet" aria-label="Thêm giao dịch">
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-</button>
+<nav class="bottom-actions" aria-label="Thao tác giao dịch">
+  <button class="bottom-action import" id="openSmsSheet" type="button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h10M4 18h7M18 14v7M14.5 17.5H21.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span>Nhập tin nhắn</span>
+  </button>
+  <button class="bottom-action add" id="openSheet" type="button">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+    <span>Thêm giao dịch</span>
+  </button>
+</nav>
 
 <div class="sheet-backdrop" id="backdrop"></div>
 <div class="sheet" id="sheet">
@@ -753,6 +1166,20 @@
   <div id="monthListWrap"></div>
 </div>
 
+<div class="sheet-backdrop" id="fundsBackdrop"></div>
+<div class="sheet" id="fundsSheet">
+  <div class="sheet-handle"></div>
+  <h2>Phân bổ 6 quỹ tài chính</h2>
+  <div class="funds-source">
+    <p class="funds-source-label">Tiền lương dùng để phân bổ</p>
+    <p class="funds-source-amount tnum" id="fundsTotalIncome">0 đ</p>
+    <p class="funds-source-month" id="fundsMonthLabel"></p>
+  </div>
+  <div class="funds-list" id="fundsList"></div>
+  <div class="funds-remainder"><span>Số tiền chưa phân bổ</span><strong class="tnum" id="fundsRemainder">0 đ</strong></div>
+  <p class="funds-note">Ứng dụng chỉ lấy các khoản được nhận diện là tiền lương để chia theo tỷ lệ 100%; các khoản thu khác không được tính vào 6 quỹ. Đây là bảng hướng dẫn số tiền cần chuyển, không tự thực hiện giao dịch trong ứng dụng ngân hàng hoặc ví điện tử.</p>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -767,6 +1194,15 @@
       "Trả nợ / Vay", "Mua sắm", "Làm đẹp", "Giải trí", "Thú cưng", "Từ thiện", "Khác"
     ]
   };
+
+  var FINANCE_FUNDS = [
+    { key:'ffa',  name:'Quỹ tự do tài chính', code:'FFA',  rate:10, app:'CAKE BANK', badge:'CAKE', purpose:'Đầu tư dài hạn' },
+    { key:'ltss', name:'Quỹ tiết kiệm dài hạn', code:'LTSS', rate:10, app:'BIDV SmartBanking', badge:'BIDV', purpose:'Mục tiêu mua nhà, xe' },
+    { key:'edu',  name:'Quỹ giáo dục', code:'EDU', rate:10, app:'Viettel Money', badge:'VTM', purpose:'Học tập và phát triển bản thân' },
+    { key:'nec',  name:'Quỹ nhu cầu thiết yếu', code:'NEC', rate:55, app:'VietinBank iPay', badge:'iPay', purpose:'Chi phí sinh hoạt thiết yếu' },
+    { key:'play', name:'Quỹ hưởng thụ', code:'PLAY', rate:10, app:'MoMo', badge:'MoMo', purpose:'Vui chơi và trải nghiệm' },
+    { key:'give', name:'Quỹ cho đi', code:'GIVE', rate:5, app:'ZaloPay', badge:'ZPay', purpose:'Quà tặng và sẻ chia' }
+  ];
 
   var state = { list: load(), type: "in" };
 
@@ -806,6 +1242,9 @@
   // ---------- Rendering ----------
   var listWrap = document.getElementById('listWrap');
   var appTitleEl = document.getElementById('appTitle');
+  var periodChipEl = document.getElementById('periodChip');
+  var transactionCountEl = document.getElementById('transactionCount');
+  var fundsIncomePreviewEl = document.getElementById('fundsIncomePreview');
   var balanceAmount = document.getElementById('balanceAmount');
   var totalInEl = document.getElementById('totalIn');
   var totalOutEl = document.getElementById('totalOut');
@@ -819,7 +1258,15 @@
     currentList.forEach(function(t){
       if(t.type === 'in') totalIn += t.amount; else totalOut += t.amount;
     });
-    appTitleEl.textContent = 'Sổ Thu Chi · Tháng ' + parseInt(currentKey.slice(5,7), 10) + '/' + currentKey.slice(0,4);
+    var salaryTotal = currentList.reduce(function(total, t){
+      return total + (isSalaryTransaction(t) ? t.amount : 0);
+    }, 0);
+    appTitleEl.textContent = 'Sổ Thu Chi';
+    periodChipEl.textContent = 'Tháng ' + parseInt(currentKey.slice(5,7), 10) + '/' + currentKey.slice(0,4);
+    transactionCountEl.textContent = currentList.length + ' giao dịch';
+    fundsIncomePreviewEl.textContent = salaryTotal > 0
+      ? 'Lương ' + fmt(salaryTotal) + ' · sẵn sàng phân bổ'
+      : 'Chưa nhận diện tiền lương';
     balanceAmount.textContent = fmt(totalIn - totalOut);
     totalInEl.textContent = fmt(totalIn);
     totalOutEl.textContent = fmt(totalOut);
@@ -827,7 +1274,7 @@
     var emptyHtml =
       '<div class="empty-state">' +
       '<svg width="52" height="52" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="' + getComputedStyle(document.documentElement).getPropertyValue('--ink-soft') + '" stroke-width="1.6" stroke-linecap="round"/></svg>' +
-      '<p>Chưa có giao dịch trong tháng này.<br>Thêm khoản thu hoặc chi đầu tiên của tháng mới.</p>' +
+      '<p><strong>Chưa có giao dịch</strong><span>Nhấn “Thêm giao dịch” để bắt đầu theo dõi tháng này.</span></p>' +
       '</div>';
 
     listWrap.innerHTML = buildDayGroupsHTML(currentList, emptyHtml);
@@ -857,12 +1304,12 @@
       html += '<div class="day-heading"><span>' + dayLabel(date) + '</span><span class="day-total tnum">' + (dayNet >= 0 ? '+' : '') + dayNet.toLocaleString('vi-VN') + ' đ</span></div>';
       items.forEach(function(t){
         html += '<div class="txn" data-id="' + t.id + '">' +
-          '<div class="txn-bar ' + t.type + '"></div>' +
+          '<div class="txn-icon ' + t.type + '">' + (t.type === 'in' ? '+' : '−') + '</div>' +
           '<div class="txn-body">' +
             '<p class="txn-cat">' + escapeHtml(t.category) + '</p>' +
             (t.note ? '<p class="txn-note">' + escapeHtml(t.note) + '</p>' : '') +
           '</div>' +
-          '<div class="txn-amount ' + t.type + ' tnum">' + (t.type === 'in' ? '+' : '−') + t.amount.toLocaleString('vi-VN') + '</div>' +
+          '<div class="txn-amount ' + t.type + ' tnum">' + (t.type === 'in' ? '+' : '−') + t.amount.toLocaleString('vi-VN') + ' đ</div>' +
           '<button class="txn-del" data-del="' + t.id + '" aria-label="Xóa giao dịch">' +
             '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m2 0-.7 12.1a2 2 0 01-2 1.9H8.7a2 2 0 01-2-1.9L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
           '</button>' +
@@ -973,11 +1420,77 @@
   fillCategories();
   render();
 
+  // ---------- Phân bổ thu nhập theo 6 quỹ tài chính ----------
+  var fundsBtn = document.getElementById('openFundsSheet');
+  var fundsBackdrop = document.getElementById('fundsBackdrop');
+  var fundsSheetEl = document.getElementById('fundsSheet');
+  var fundsTotalIncomeEl = document.getElementById('fundsTotalIncome');
+  var fundsMonthLabelEl = document.getElementById('fundsMonthLabel');
+  var fundsListEl = document.getElementById('fundsList');
+  var fundsRemainderEl = document.getElementById('fundsRemainder');
+
+  function currentMonthSalary(){
+    var current = todayStr().slice(0,7);
+    return state.list.reduce(function(total, t){
+      return total + (t.date && t.date.slice(0,7) === current && isSalaryTransaction(t) ? t.amount : 0);
+    }, 0);
+  }
+
+  function renderFundsSheet(){
+    var current = todayStr().slice(0,7);
+    var income = currentMonthSalary();
+    var allocated = 0;
+    var amounts = FINANCE_FUNDS.map(function(fund, index){
+      var amount = index === FINANCE_FUNDS.length - 1
+        ? income - allocated
+        : Math.floor(income * fund.rate / 100);
+      allocated += amount;
+      return amount;
+    });
+
+    fundsTotalIncomeEl.textContent = fmt(income);
+    fundsMonthLabelEl.textContent = income > 0
+      ? monthLabel(current) + ' · Đã nhận diện tiền lương · Tổng tỷ lệ 100%'
+      : monthLabel(current) + ' · Chưa có tiền lương được nhận diện';
+    fundsListEl.innerHTML = FINANCE_FUNDS.map(function(fund, index){
+      return '<div class="fund-item ' + fund.key + '">' +
+        '<div class="fund-app-badge">' + fund.badge + '</div>' +
+        '<div><p class="fund-name">' + fund.name + '</p>' +
+          '<p class="fund-meta">' + fund.code + ' · ' + fund.app + '<br>' + fund.purpose + '</p></div>' +
+        '<div class="fund-amount"><strong class="tnum">' + fmt(amounts[index]) + '</strong><span>' + fund.rate + '%</span></div>' +
+      '</div>';
+    }).join('');
+    fundsRemainderEl.textContent = fmt(Math.max(0, income - allocated));
+  }
+
+  function openFundsSheet(){
+    renderFundsSheet();
+    fundsBackdrop.classList.add('show');
+    fundsSheetEl.classList.add('show');
+  }
+  function closeFundsSheet(){
+    fundsBackdrop.classList.remove('show');
+    fundsSheetEl.classList.remove('show');
+  }
+  fundsBtn.addEventListener('click', openFundsSheet);
+  fundsBackdrop.addEventListener('click', closeFundsSheet);
+
   // ---------- Nhập từ tin nhắn ngân hàng (dán văn bản, tự nhận diện) ----------
   function normalizeText(s){
     return s.toString().toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
       .replace(/đ/g,'d');
+  }
+
+  function isSalaryText(rawText){
+    var t = normalizeText(rawText || '');
+    return /(^|[^a-z0-9])(luong|salary|payroll|wage)([^a-z0-9]|$)/.test(t) ||
+      /(tien|chi|tra|chuyen|nhan)\s+luong/.test(t);
+  }
+
+  function isSalaryTransaction(transaction){
+    return !!transaction && transaction.type === 'in' &&
+      (transaction.category === 'Lương' || isSalaryText(transaction.note || ''));
   }
 
   var CAT_KEYWORDS_OUT = [
@@ -1000,13 +1513,14 @@
   ];
 
   var CAT_KEYWORDS_IN = [
-    { cat:"Lương", kw:["luong","salary","tra luong"] },
+    { cat:"Lương", kw:["luong","tien luong","luong thang","tra luong","chi luong","nhan luong","salary","payroll","wage"] },
     { cat:"Thưởng", kw:["thuong","bonus"] },
     { cat:"Đầu tư", kw:["co tuc","loi nhuan","lai suat tiet kiem","dividend"] },
     { cat:"Bán đồ", kw:["ban hang","ban do","thanh ly"] }
   ];
 
   function guessCategory(type, rawText){
+    if(type === 'in' && isSalaryText(rawText)) return "Lương";
     var t = normalizeText(rawText);
     var list = type === 'in' ? CAT_KEYWORDS_IN : CAT_KEYWORDS_OUT;
     for(var i=0;i<list.length;i++){
@@ -1021,6 +1535,7 @@
     var t = normalizeText(rawText);
     if(/[+]\s?[\d.,]+\s?(vnd|d\b)/.test(t)) return 'in';
     if(/[\-−]\s?[\d.,]+\s?(vnd|d\b)/.test(t)) return 'out';
+    if(isSalaryText(rawText)) return 'in';
     if(/(ghi co|nhan tien|cong tien|chuyen khoan den|nap tien)/.test(t)) return 'in';
     return 'out';
   }

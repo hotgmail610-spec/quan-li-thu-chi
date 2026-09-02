@@ -1111,10 +1111,10 @@
     smsBackdrop.classList.add('show');
     smsSheetEl.classList.add('show');
     tryAutoClipboard(token);
-    setTimeout(function(){ smsInput.focus(); }, 260);
   }
   function closeSmsSheet(){
     smsSessionToken++;
+    smsInput.blur();
     smsBackdrop.classList.remove('show');
     smsSheetEl.classList.remove('show');
   }
@@ -1123,6 +1123,7 @@
 
   smsInput.addEventListener('paste', function(){
     smsSessionToken++;
+    smsInput.blur();
     setTimeout(function(){ runParse(smsInput.value); }, 30);
   });
 

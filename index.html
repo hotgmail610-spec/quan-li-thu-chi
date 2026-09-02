@@ -1460,7 +1460,7 @@
     setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
   }
 
-  // ---------- Banner tự động tổng kết khi sang tháng mới ----------
+  // ---------- Tổng kết ngày cuối tháng và tự làm mới từ mùng 1 ----------
   function checkMonthRollover(){
     var LAST_KEY = 'soChiTieu_lastSeenMonth_v1';
     var current = todayStr().slice(0,7);
@@ -1475,18 +1475,33 @@
     }
     if(summaryKey){
       var m = months.find(function(x){ return x.key === summaryKey; });
-      if(m) showMonthBanner(m);
+      if(m) showMonthBanner(m, false);
     }
     localStorage.setItem(LAST_KEY, current);
   }
 
-  function showMonthBanner(m){
+  function checkEndOfMonthSummary(){
+    var now = new Date();
+    var lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    if(now.getDate() !== lastDay) return;
+    var current = todayStr().slice(0,7);
+    var m = getMonthsSummary().find(function(x){ return x.key === current; });
+    if(m) showMonthBanner(m, true);
+  }
+
+  function showMonthBanner(m, isClosingDay){
     var el = document.getElementById('monthBanner');
+    var title = isClosingDay
+      ? 'Tổng kết ' + monthLabel(m.key)
+      : monthLabel(m.key) + ' đã kết thúc';
+    var cycleMessage = isClosingDay
+      ? 'Hôm nay là ngày cuối tháng. Sang mùng 1, trang chính sẽ tự làm mới để theo dõi tháng mới.'
+      : 'Trang chính đã tự làm mới để theo dõi ' + monthLabel(todayStr().slice(0,7)) + '.';
     el.innerHTML =
       '<div class="month-banner-card">' +
         '<button class="month-banner-close" id="monthBannerClose" aria-label="Đóng">×</button>' +
-        '<p class="month-banner-title serif">' + monthLabel(m.key) + ' đã kết thúc</p>' +
-        '<p class="month-banner-line">Thu <b class="tnum">' + m.in.toLocaleString('vi-VN') + ' đ</b> · Chi <b class="tnum">' + m.out.toLocaleString('vi-VN') + ' đ</b> · Dư <b class="tnum">' + (m.net >= 0 ? '+' : '') + m.net.toLocaleString('vi-VN') + ' đ</b><br>Trang chính đã tự làm mới để theo dõi ' + monthLabel(todayStr().slice(0,7)) + '.</p>' +
+        '<p class="month-banner-title serif">' + title + '</p>' +
+        '<p class="month-banner-line">Thu <b class="tnum">' + m.in.toLocaleString('vi-VN') + ' đ</b> · Chi <b class="tnum">' + m.out.toLocaleString('vi-VN') + ' đ</b> · Dư <b class="tnum">' + (m.net >= 0 ? '+' : '') + m.net.toLocaleString('vi-VN') + ' đ</b><br>' + cycleMessage + '</p>' +
         '<button class="month-banner-view" id="monthBannerView">Xem bản tổng kết</button>' +
       '</div>';
     var closeBtn = document.getElementById('monthBannerClose');
@@ -1500,6 +1515,7 @@
   }
 
   checkMonthRollover();
+  checkEndOfMonthSummary();
 
   // Nếu ứng dụng vẫn mở khi bước sang tháng mới, tự tổng kết và đổi kỳ theo dõi.
   var activeMonthKey = todayStr().slice(0,7);
@@ -1508,10 +1524,14 @@
     if(current === activeMonthKey) return;
     activeMonthKey = current;
     checkMonthRollover();
+    checkEndOfMonthSummary();
     render();
   }
   document.addEventListener('visibilitychange', function(){
-    if(!document.hidden) refreshMonthBoundary();
+    if(!document.hidden){
+      refreshMonthBoundary();
+      checkEndOfMonthSummary();
+    }
   });
   setInterval(refreshMonthBoundary, 60000);
 

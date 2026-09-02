@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -496,6 +495,29 @@
     border-radius:10px;
   }
 
+  .auto-toast{
+    position:fixed;
+    left:50%;
+    bottom:5.8rem;
+    width:max-content;
+    max-width:calc(100vw - 2.5rem);
+    transform:translate(-50%, 18px);
+    background:var(--forest);
+    color:var(--card);
+    border-radius:12px;
+    padding:0.75rem 1rem;
+    box-shadow:var(--shadow);
+    font-size:0.84rem;
+    font-weight:600;
+    text-align:center;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.2s ease, transform 0.2s ease;
+    z-index:40;
+  }
+  .auto-toast.show{ opacity:1; transform:translate(-50%, 0); }
+  .auto-toast.warn{ background:var(--ochre); color:var(--ink); }
+
   .month-history-link{
     display:block;
     width:100%;
@@ -705,18 +727,18 @@
 <div class="sheet" id="smsSheet">
   <div class="sheet-handle"></div>
   <h2>Nhập từ tin nhắn ngân hàng</h2>
-  <p class="hint-text">Dán nội dung tin nhắn/thông báo biến động số dư vào ô bên dưới — app sẽ tự động phân tích ngay khi bạn dán. Nếu đã sao chép sẵn trước khi mở, app cũng tự thử đọc và điền luôn. Nếu dán nhiều tin nhắn cùng lúc, để cách nhau 1 dòng trống giữa mỗi tin.</p>
+  <p class="hint-text">Dán nội dung tin nhắn/thông báo biến động số dư vào ô bên dưới — app sẽ tự động phân tích và lưu giao dịch thẳng vào sổ. Nếu đã sao chép sẵn trước khi mở, app cũng tự đọc và lưu luôn. Không cần bấm thêm giao dịch. Nếu dán nhiều tin nhắn cùng lúc, để cách nhau 1 dòng trống giữa mỗi tin.</p>
 
   <div class="field">
     <textarea id="smsInput" rows="6" placeholder="VD: TK 1234 phat sinh giao dich -85,000VND luc 12/08/2026 10:23. So du: 2,450,000VND. Noi dung: THANH TOAN GRABFOOD"></textarea>
   </div>
 
-  <button class="parse-btn" id="parseBtn">Phân tích lại</button>
+  <button class="parse-btn" id="parseBtn">Thử phân tích lại</button>
 
   <div id="parsedResults"></div>
-
-  <button class="save-btn in" id="addAllBtn" style="display:none;margin-top:1.1rem;">Thêm giao dịch đã chọn</button>
 </div>
+
+<div class="auto-toast" id="autoToast" role="status" aria-live="polite"></div>
 
 <div class="sheet-backdrop" id="monthBackdrop"></div>
 <div class="sheet" id="monthSheet">
@@ -1012,6 +1034,16 @@
     return rawText.replace(/\s+/g,' ').trim().slice(0,70);
   }
 
+  function messageKey(rawText){
+    var normalized = normalizeText(rawText).replace(/\s+/g,' ').trim();
+    var hash = 2166136261;
+    for(var i=0;i<normalized.length;i++){
+      hash ^= normalized.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return 'bank-' + normalized.length + '-' + (hash >>> 0).toString(36);
+  }
+
   function parseMessages(text){
     var blocks = text.split(/\n\s*\n/).map(function(b){return b.trim();}).filter(Boolean);
     var results = [];
@@ -1024,7 +1056,8 @@
         amount: amount,
         category: guessCategory(type, block),
         date: extractDate(block),
-        note: extractNote(block)
+        note: extractNote(block),
+        sourceKey: messageKey(block)
       });
     });
     return results;
@@ -1036,18 +1069,33 @@
   var smsInput = document.getElementById('smsInput');
   var parseBtn = document.getElementById('parseBtn');
   var parsedResultsEl = document.getElementById('parsedResults');
-  var addAllBtn = document.getElementById('addAllBtn');
+  var autoToast = document.getElementById('autoToast');
   var parsedItems = [];
+  var smsSessionToken = 0;
+  var toastTimer = null;
 
   function runParse(text){
     var found = parseMessages(text);
     parsedItems = found.map(function(f, i){ f._key = i; return f; });
-    renderParsed();
+    if(parsedItems.length === 0){
+      renderParsed();
+      return;
+    }
+    autoAddParsedTransactions();
   }
 
-  function tryAutoClipboard(){
+  function showAutoToast(message, isWarning){
+    clearTimeout(toastTimer);
+    autoToast.textContent = message;
+    autoToast.classList.toggle('warn', !!isWarning);
+    autoToast.classList.add('show');
+    toastTimer = setTimeout(function(){ autoToast.classList.remove('show'); }, 2600);
+  }
+
+  function tryAutoClipboard(token){
     if(!navigator.clipboard || !navigator.clipboard.readText) return;
     navigator.clipboard.readText().then(function(text){
+      if(token !== smsSessionToken || smsInput.value.trim() || !smsSheetEl.classList.contains('show')) return;
       if(text && extractAmount(text)){
         smsInput.value = text;
         runParse(text);
@@ -1056,16 +1104,17 @@
   }
 
   function openSmsSheet(){
+    var token = ++smsSessionToken;
     smsInput.value = '';
     parsedItems = [];
     parsedResultsEl.innerHTML = '';
-    addAllBtn.style.display = 'none';
     smsBackdrop.classList.add('show');
     smsSheetEl.classList.add('show');
-    tryAutoClipboard();
+    tryAutoClipboard(token);
     setTimeout(function(){ smsInput.focus(); }, 260);
   }
   function closeSmsSheet(){
+    smsSessionToken++;
     smsBackdrop.classList.remove('show');
     smsSheetEl.classList.remove('show');
   }
@@ -1073,6 +1122,7 @@
   smsBackdrop.addEventListener('click', closeSmsSheet);
 
   smsInput.addEventListener('paste', function(){
+    smsSessionToken++;
     setTimeout(function(){ runParse(smsInput.value); }, 30);
   });
 
@@ -1085,11 +1135,8 @@
   function renderParsed(){
     if(parsedItems.length === 0){
       parsedResultsEl.innerHTML = '<p class="parsed-empty-hint">Không nhận diện được giao dịch nào. Hãy kiểm tra lại nội dung đã dán (cần có số tiền kèm VND hoặc đ).</p>';
-      addAllBtn.style.display = 'none';
       return;
     }
-    addAllBtn.style.display = 'block';
-    addAllBtn.textContent = 'Thêm ' + parsedItems.length + ' giao dịch';
     parsedResultsEl.innerHTML = parsedItems.map(function(item){
       return '<div class="parsed-row" data-key="'+item._key+'">' +
         '<div class="parsed-row-top">' +
@@ -1156,22 +1203,56 @@
     }
   });
 
-  addAllBtn.addEventListener('click', function(){
+  function autoAddParsedTransactions(){
     var valid = parsedItems.filter(function(it){ return it.amount > 0; });
-    valid.forEach(function(it, idx){
+    var knownKeys = {};
+    state.list.forEach(function(t){
+      if(t.sourceKey) knownKeys[t.sourceKey] = true;
+    });
+
+    var fresh = valid.filter(function(it){
+      if(!it.sourceKey || knownKeys[it.sourceKey]) return false;
+      knownKeys[it.sourceKey] = true;
+      return true;
+    });
+    var skipped = valid.length - fresh.length;
+
+    if(fresh.length === 0){
+      parsedItems = [];
+      if(skipped > 0){
+        parsedResultsEl.innerHTML = '<p class="parsed-empty-hint">Giao dịch này đã có trong sổ nên ứng dụng không thêm lại.</p>';
+        showAutoToast('Giao dịch đã có trong sổ', true);
+      }else{
+        renderParsed();
+      }
+      return;
+    }
+
+    var nextId = Math.max(Date.now(), state.list.reduce(function(maxId, t){
+      return Math.max(maxId, Number(t.id) || 0);
+    }, 0) + 1);
+
+    fresh.forEach(function(it, idx){
       state.list.push({
-        id: Date.now() + idx,
+        id: nextId + idx,
         type: it.type,
         amount: it.amount,
         category: it.category,
         note: it.note,
-        date: it.date || todayStr()
+        date: it.date || todayStr(),
+        sourceKey: it.sourceKey
       });
     });
     save();
     render();
+    parsedItems = [];
+    smsInput.value = '';
     closeSmsSheet();
-  });
+    showAutoToast(
+      'Đã tự động thêm ' + fresh.length + ' giao dịch' + (skipped ? ' · Bỏ qua ' + skipped + ' giao dịch trùng' : ''),
+      false
+    );
+  }
 
   // ---------- Tổng kết theo tháng ----------
   var MONTH_NAMES_UNUSED = null; // (giữ chỗ, không dùng)

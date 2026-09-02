@@ -999,6 +999,51 @@
     letter-spacing:-0.025em;
     margin-bottom:1rem;
   }
+  .sheet-titlebar{
+    position:sticky;
+    top:-1rem;
+    z-index:8;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:0.75rem;
+    margin:0 -0.25rem 1rem;
+    padding:0.7rem 0.25rem 0.75rem;
+    background:rgba(255,255,255,0.96);
+    border-bottom:1px solid rgba(220,227,223,0.85);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+  }
+  .sheet-titlebar h2{
+    flex:1;
+    min-width:0;
+    margin:0;
+  }
+  .sheet-close{
+    flex:0 0 auto;
+    min-height:44px;
+    padding:0 0.82rem;
+    border:1px solid #D6E0DB;
+    border-radius:999px;
+    background:#F2F6F4;
+    color:var(--forest);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:0.35rem;
+    font-family:inherit;
+    font-size:0.82rem;
+    font-weight:800;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .sheet-close-icon{
+    font-size:1.35rem;
+    font-weight:500;
+    line-height:1;
+    transform:translateY(-1px);
+  }
+  .sheet-close:active{ transform:scale(0.96); background:#E7F0EC; }
   input,select,textarea#smsInput,.amount-input-wrap{
     background:#F8FAF9;
     border-color:var(--line);
@@ -1108,7 +1153,10 @@
 <div class="sheet-backdrop" id="backdrop"></div>
 <div class="sheet" id="sheet">
   <div class="sheet-handle"></div>
-  <h2>Thêm giao dịch</h2>
+  <div class="sheet-titlebar">
+    <h2>Thêm giao dịch</h2>
+    <button class="sheet-close" id="closeAddSheet" type="button" aria-label="Đóng bảng thêm giao dịch"><span class="sheet-close-icon" aria-hidden="true">&times;</span><span>Đóng</span></button>
+  </div>
 
   <div class="type-switch">
     <button type="button" data-t="in" class="active">Thu</button>
@@ -1145,7 +1193,10 @@
 <div class="sheet-backdrop" id="smsBackdrop"></div>
 <div class="sheet" id="smsSheet">
   <div class="sheet-handle"></div>
-  <h2>Nhập từ tin nhắn ngân hàng</h2>
+  <div class="sheet-titlebar">
+    <h2>Nhập từ tin nhắn ngân hàng</h2>
+    <button class="sheet-close" id="closeSmsSheetBtn" type="button" aria-label="Đóng bảng nhập tin nhắn"><span class="sheet-close-icon" aria-hidden="true">&times;</span><span>Đóng</span></button>
+  </div>
   <p class="hint-text">Sao chép nội dung tin nhắn/thông báo biến động số dư rồi mở mục này — app sẽ tự đọc, phân tích và lưu thẳng vào sổ mà không bật bàn phím. Nếu chưa nhận được, chạm nút đọc lại bên dưới.</p>
 
   <div class="field">
@@ -1162,14 +1213,20 @@
 <div class="sheet-backdrop" id="monthBackdrop"></div>
 <div class="sheet" id="monthSheet">
   <div class="sheet-handle"></div>
-  <h2 id="monthSheetTitle">Lịch sử theo tháng</h2>
+  <div class="sheet-titlebar">
+    <h2 id="monthSheetTitle">Lịch sử theo tháng</h2>
+    <button class="sheet-close" id="closeMonthSheetBtn" type="button" aria-label="Đóng bảng lịch sử theo tháng"><span class="sheet-close-icon" aria-hidden="true">&times;</span><span>Đóng</span></button>
+  </div>
   <div id="monthListWrap"></div>
 </div>
 
 <div class="sheet-backdrop" id="fundsBackdrop"></div>
 <div class="sheet" id="fundsSheet">
   <div class="sheet-handle"></div>
-  <h2>Phân bổ 6 quỹ tài chính</h2>
+  <div class="sheet-titlebar">
+    <h2>Phân bổ 6 quỹ tài chính</h2>
+    <button class="sheet-close" id="closeFundsSheetBtn" type="button" aria-label="Đóng bảng phân bổ 6 quỹ"><span class="sheet-close-icon" aria-hidden="true">&times;</span><span>Đóng</span></button>
+  </div>
   <div class="funds-source">
     <p class="funds-source-label">Tiền lương dùng để phân bổ</p>
     <p class="funds-source-amount tnum" id="fundsTotalIncome">0 đ</p>
@@ -1354,6 +1411,7 @@
   var amountInput = document.getElementById('amountInput');
   var noteInput = document.getElementById('noteInput');
   var saveBtn = document.getElementById('saveBtn');
+  var closeAddSheetBtn = document.getElementById('closeAddSheet');
 
   function fillCategories(){
     categorySelect.innerHTML = CATS[state.type].map(function(c){
@@ -1389,6 +1447,7 @@
 
   openBtn.addEventListener('click', openSheet);
   backdrop.addEventListener('click', closeSheet);
+  closeAddSheetBtn.addEventListener('click', closeSheet);
 
   amountInput.addEventListener('input', function(){
     var digits = amountInput.value.replace(/[^\d]/g, '');
@@ -1428,6 +1487,7 @@
   var fundsMonthLabelEl = document.getElementById('fundsMonthLabel');
   var fundsListEl = document.getElementById('fundsList');
   var fundsRemainderEl = document.getElementById('fundsRemainder');
+  var closeFundsSheetBtn = document.getElementById('closeFundsSheetBtn');
 
   function currentMonthSalary(){
     var current = todayStr().slice(0,7);
@@ -1474,6 +1534,7 @@
   }
   fundsBtn.addEventListener('click', openFundsSheet);
   fundsBackdrop.addEventListener('click', closeFundsSheet);
+  closeFundsSheetBtn.addEventListener('click', closeFundsSheet);
 
   // ---------- Nhập từ tin nhắn ngân hàng (dán văn bản, tự nhận diện) ----------
   function normalizeText(s){
@@ -1597,6 +1658,7 @@
   var parseBtn = document.getElementById('parseBtn');
   var parsedResultsEl = document.getElementById('parsedResults');
   var autoToast = document.getElementById('autoToast');
+  var closeSmsSheetBtn = document.getElementById('closeSmsSheetBtn');
   var parsedItems = [];
   var smsSessionToken = 0;
   var toastTimer = null;
@@ -1662,6 +1724,7 @@
   }
   smsBtn.addEventListener('click', openSmsSheet);
   smsBackdrop.addEventListener('click', closeSmsSheet);
+  closeSmsSheetBtn.addEventListener('click', closeSmsSheet);
 
   smsInput.addEventListener('focus', function(){
     smsInput.blur();
@@ -1835,6 +1898,7 @@
   var monthBackdrop = document.getElementById('monthBackdrop');
   var monthSheetEl = document.getElementById('monthSheet');
   var monthListWrap = document.getElementById('monthListWrap');
+  var closeMonthSheetBtn = document.getElementById('closeMonthSheetBtn');
   var currentMonthView = null;
 
   function renderMonthSheet(){
@@ -1900,6 +1964,7 @@
   }
   monthBtn.addEventListener('click', function(){ currentMonthView = null; openMonthSheetFn(); });
   monthBackdrop.addEventListener('click', closeMonthSheetFn);
+  closeMonthSheetBtn.addEventListener('click', closeMonthSheetFn);
 
   monthListWrap.addEventListener('click', function(e){
     var viewBtn = e.target.closest('[data-view]');

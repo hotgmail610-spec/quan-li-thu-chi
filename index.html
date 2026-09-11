@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -588,7 +589,7 @@
     --fund:#777;
     --fund-soft:#f1f1ed;
     display:grid;
-    grid-template-columns:46px minmax(0,1fr) auto;
+    grid-template-columns:28px 46px minmax(0,1fr);
     align-items:center;
     gap:0.75rem;
     background:linear-gradient(90deg, var(--fund-soft), var(--card) 42%);
@@ -597,12 +598,18 @@
     border-radius:14px;
     padding:0.75rem 0.8rem;
   }
-  .fund-item.ffa{ --fund:#3478D4; --fund-soft:#E9F2FC; }
-  .fund-item.ltss{ --fund:#5E9BE6; --fund-soft:#EDF4FD; }
-  .fund-item.edu{ --fund:#D7475F; --fund-soft:#FBECEF; }
   .fund-item.nec{ --fund:#C98655; --fund-soft:#FAEFE7; }
+  .fund-item.growth{ --fund:#3478D4; --fund-soft:#E9F2FC; }
   .fund-item.play{ --fund:#EF675C; --fund-soft:#FCEAE8; }
   .fund-item.give{ --fund:#6FAE4B; --fund-soft:#EDF6E8; }
+  .fund-check{
+    width:22px;
+    height:22px;
+    margin:0;
+    accent-color:var(--fund);
+    cursor:default;
+    pointer-events:none;
+  }
   .fund-app-badge{
     width:46px;
     height:46px;
@@ -619,9 +626,40 @@
   }
   .fund-name{ font-size:0.88rem; font-weight:700; margin:0; }
   .fund-meta{ font-size:0.7rem; color:var(--ink-soft); margin:0.15rem 0 0; line-height:1.35; }
-  .fund-amount{ text-align:right; white-space:nowrap; }
-  .fund-amount strong{ display:block; color:var(--fund); font-size:0.95rem; }
-  .fund-amount span{ display:block; color:var(--ink-soft); font-size:0.7rem; margin-top:0.1rem; }
+  .fund-amount{
+    grid-column:2 / -1;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(135px,170px);
+    align-items:center;
+    gap:0.65rem;
+    padding-top:0.55rem;
+    border-top:1px solid var(--line);
+  }
+  .fund-amount label{ color:var(--ink-soft); font-size:0.72rem; }
+  .fund-amount-input{
+    display:flex;
+    align-items:center;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:0 0.65rem;
+  }
+  .fund-amount-input input{
+    width:100%;
+    min-width:0;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:var(--fund);
+    font-family:inherit;
+    font-size:0.9rem;
+    font-weight:700;
+    line-height:1.2;
+    text-align:right;
+    padding:0.58rem 0.25rem 0.58rem 0;
+    cursor:default;
+  }
+  .fund-amount-input span{ color:var(--ink-soft); font-size:0.72rem; }
   .funds-remainder{
     display:flex;
     justify-content:space-between;
@@ -1121,8 +1159,8 @@
           <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/></svg>
         </span>
         <span class="quick-action-copy">
-          <span class="quick-action-title">6 quỹ tài chính</span>
-          <span class="quick-action-sub" id="fundsIncomePreview">Chưa nhận diện tiền lương</span>
+          <span class="quick-action-title">4 quỹ tài chính</span>
+          <span class="quick-action-sub" id="fundsIncomePreview">Chưa nhận diện khoản phân bổ</span>
         </span>
       </button>
     </div>
@@ -1224,17 +1262,17 @@
 <div class="sheet" id="fundsSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-titlebar">
-    <h2>Phân bổ 6 quỹ tài chính</h2>
-    <button class="sheet-close" id="closeFundsSheetBtn" type="button" aria-label="Đóng bảng phân bổ 6 quỹ"><span class="sheet-close-icon" aria-hidden="true">&times;</span><span>Đóng</span></button>
+    <h2>Phân bổ 4 quỹ tài chính</h2>
+    <button class="sheet-close" id="closeFundsSheetBtn" type="button" aria-label="Đóng bảng phân bổ 4 quỹ"><span class="sheet-close-icon" aria-hidden="true">&times;</span><span>Đóng</span></button>
   </div>
   <div class="funds-source">
-    <p class="funds-source-label">Tiền lương dùng để phân bổ</p>
+    <p class="funds-source-label">Số tiền dùng để phân bổ</p>
     <p class="funds-source-amount tnum" id="fundsTotalIncome">0 đ</p>
     <p class="funds-source-month" id="fundsMonthLabel"></p>
   </div>
   <div class="funds-list" id="fundsList"></div>
   <div class="funds-remainder"><span>Số tiền chưa phân bổ</span><strong class="tnum" id="fundsRemainder">0 đ</strong></div>
-  <p class="funds-note">Ứng dụng chỉ lấy các khoản được nhận diện là tiền lương để chia theo tỷ lệ 100%; các khoản thu khác không được tính vào 6 quỹ. Đây là bảng hướng dẫn số tiền cần chuyển, không tự thực hiện giao dịch trong ứng dụng ngân hàng hoặc ví điện tử.</p>
+  <p class="funds-note">Khi nhận diện tiền lương, ứng dụng tự chia đủ 4 quỹ theo tỷ lệ. Sau đó, thông báo chuyển tiền có trường Nội dung, ND, Content hoặc Diễn giải sẽ tự đánh dấu quỹ tương ứng. Dấu tích và số tiền đều được cập nhật tự động, không cần nhập thủ công.</p>
 </div>
 
 <script>
@@ -1242,6 +1280,7 @@
   "use strict";
 
   var STORAGE_KEY = "soChiTieu_transactions_v1";
+  var FUND_STATE_KEY = "soChiTieu_fundAllocations_v2";
 
   var CATS = {
     in:  ["Lương", "Thưởng", "Đầu tư", "Bán đồ", "Khác"],
@@ -1253,15 +1292,14 @@
   };
 
   var FINANCE_FUNDS = [
-    { key:'ffa',  name:'Quỹ tự do tài chính', code:'FFA',  rate:10, app:'CAKE BANK', badge:'CAKE', purpose:'Đầu tư dài hạn' },
-    { key:'ltss', name:'Quỹ tiết kiệm dài hạn', code:'LTSS', rate:10, app:'BIDV SmartBanking', badge:'BIDV', purpose:'Mục tiêu mua nhà, xe' },
-    { key:'edu',  name:'Quỹ giáo dục', code:'EDU', rate:10, app:'Viettel Money', badge:'VTM', purpose:'Học tập và phát triển bản thân' },
-    { key:'nec',  name:'Quỹ nhu cầu thiết yếu', code:'NEC', rate:55, app:'VietinBank iPay', badge:'iPay', purpose:'Chi phí sinh hoạt thiết yếu' },
-    { key:'play', name:'Quỹ hưởng thụ', code:'PLAY', rate:10, app:'MoMo', badge:'MoMo', purpose:'Vui chơi và trải nghiệm' },
-    { key:'give', name:'Quỹ cho đi', code:'GIVE', rate:5, app:'ZaloPay', badge:'ZPay', purpose:'Quà tặng và sẻ chia' }
+    { key:'nec', name:'Nhu cầu thiết yếu', code:'NEC', rate:55, app:'VietinBank iPay', badge:'iPay', purpose:'Chi phí sinh hoạt thiết yếu', aliases:['vietinbank','vietin bank','vietinbank ipay','ipay','quy nhu cau thiet yeu','nhu cau thiet yeu','nec'] },
+    { key:'growth', name:'Tích lũy, Đầu tư & Học tập', code:'FFA + LTSS + EDU', rate:30, app:'CAKE Bank', badge:'CAKE', purpose:'Gộp FFA + LTSS + EDU', aliases:['cake bank','cakebank','cake by vpbank','cake','tich luy dau tu hoc tap','tich luy','quy dau tu','quy hoc tap','ffa','ltss','edu'] },
+    { key:'play', name:'Hưởng thụ', code:'PLAY', rate:10, app:'MoMo', badge:'MoMo', purpose:'Vui chơi và trải nghiệm', aliases:['momo','quy huong thu','huong thu','play'] },
+    { key:'give', name:'Cho đi', code:'GIVE', rate:5, app:'ZaloPay', badge:'ZPay', purpose:'Quà tặng và sẻ chia', aliases:['zalopay','zalo pay','quy cho di','cho di','give'] }
   ];
 
   var state = { list: load(), type: "in" };
+  var fundAllocationState = loadFundAllocationState();
 
   function load(){
     try{
@@ -1272,6 +1310,17 @@
 
   function save(){
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.list));
+  }
+
+  function loadFundAllocationState(){
+    try{
+      var raw = localStorage.getItem(FUND_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){ return {}; }
+  }
+
+  function saveFundAllocationState(){
+    localStorage.setItem(FUND_STATE_KEY, JSON.stringify(fundAllocationState));
   }
 
   function fmt(n){
@@ -1321,8 +1370,12 @@
     appTitleEl.textContent = 'Sổ Thu Chi';
     periodChipEl.textContent = 'Tháng ' + parseInt(currentKey.slice(5,7), 10) + '/' + currentKey.slice(0,4);
     transactionCountEl.textContent = currentList.length + ' giao dịch';
+    var savedFundState = fundAllocationState[currentKey];
+    var completedFunds = savedFundState && savedFundState.selected
+      ? FINANCE_FUNDS.filter(function(fund){ return !!savedFundState.selected[fund.key]; }).length
+      : 0;
     fundsIncomePreviewEl.textContent = salaryTotal > 0
-      ? 'Lương ' + fmt(salaryTotal) + ' · sẵn sàng phân bổ'
+      ? 'Lương ' + fmt(salaryTotal) + ' · đã chia 4 quỹ' + (completedFunds ? ' · ' + completedFunds + '/4 đã chuyển' : '')
       : 'Chưa nhận diện tiền lương';
     balanceAmount.textContent = fmt(totalIn - totalOut);
     totalInEl.textContent = fmt(totalIn);
@@ -1471,6 +1524,10 @@
       date: dateInput.value || todayStr()
     };
     state.list.push(t);
+    if(isSalaryTransaction(t)){
+      syncSalaryAllocation(t.date.slice(0,7), true);
+      saveFundAllocationState();
+    }
     save();
     render();
     closeSheet();
@@ -1479,7 +1536,7 @@
   fillCategories();
   render();
 
-  // ---------- Phân bổ thu nhập theo 6 quỹ tài chính ----------
+  // ---------- Phân bổ thu nhập theo 4 quỹ tài chính ----------
   var fundsBtn = document.getElementById('openFundsSheet');
   var fundsBackdrop = document.getElementById('fundsBackdrop');
   var fundsSheetEl = document.getElementById('fundsSheet');
@@ -1491,36 +1548,95 @@
 
   function currentMonthSalary(){
     var current = todayStr().slice(0,7);
+    return salaryForMonth(current);
+  }
+
+  function salaryForMonth(monthKey){
     return state.list.reduce(function(total, t){
-      return total + (t.date && t.date.slice(0,7) === current && isSalaryTransaction(t) ? t.amount : 0);
+      return total + (t.date && t.date.slice(0,7) === monthKey && isSalaryTransaction(t) ? t.amount : 0);
     }, 0);
+  }
+
+  function getFinanceFund(key){
+    return FINANCE_FUNDS.find(function(fund){ return fund.key === key; }) || null;
+  }
+
+  function getMonthFundState(monthKey, shouldCreate){
+    if(!fundAllocationState[monthKey] && shouldCreate){
+      fundAllocationState[monthKey] = { baseAmount:0, selected:{}, amounts:{}, detectedFundKey:null };
+    }
+    return fundAllocationState[monthKey] || null;
+  }
+
+  function proportionalAmount(amount, rate){
+    return Math.round((Number(amount) || 0) * rate / 100);
+  }
+
+  function calculateFundDistribution(amount){
+    var total = Number(amount) || 0;
+    var allocated = 0;
+    var result = {};
+    FINANCE_FUNDS.forEach(function(fund, index){
+      var value = index === FINANCE_FUNDS.length - 1
+        ? total - allocated
+        : Math.floor(total * fund.rate / 100);
+      result[fund.key] = value;
+      allocated += value;
+    });
+    return result;
+  }
+
+  function syncSalaryAllocation(monthKey, resetSelections){
+    var saved = getMonthFundState(monthKey, true);
+    saved.baseAmount = salaryForMonth(monthKey);
+    saved.amounts = calculateFundDistribution(saved.baseAmount);
+    if(resetSelections || !saved.selected){
+      saved.selected = {};
+      FINANCE_FUNDS.forEach(function(fund){ saved.selected[fund.key] = false; });
+    }
+    saved.detectedFundKey = null;
+    saved.updatedAt = new Date().toISOString();
+  }
+
+  function calculateFundsRemainder(){
+    var baseAmount = Number(fundsListEl.getAttribute('data-base-amount')) || 0;
+    var allocated = 0;
+    fundsListEl.querySelectorAll('[data-fund-check]:checked').forEach(function(check){
+      var key = check.getAttribute('data-fund-check');
+      var input = fundsListEl.querySelector('[data-fund-amount="' + key + '"]');
+      if(input) allocated += Number(input.value.replace(/[^\d]/g,'')) || 0;
+    });
+    fundsRemainderEl.textContent = fmt(Math.max(0, baseAmount - allocated));
   }
 
   function renderFundsSheet(){
     var current = todayStr().slice(0,7);
-    var income = currentMonthSalary();
-    var allocated = 0;
-    var amounts = FINANCE_FUNDS.map(function(fund, index){
-      var amount = index === FINANCE_FUNDS.length - 1
-        ? income - allocated
-        : Math.floor(income * fund.rate / 100);
-      allocated += amount;
-      return amount;
-    });
+    var saved = getMonthFundState(current, false);
+    var salaryIncome = currentMonthSalary();
+    var income = salaryIncome;
+    var distribution = calculateFundDistribution(income);
+    var detectedFund = saved ? getFinanceFund(saved.detectedFundKey) : null;
 
     fundsTotalIncomeEl.textContent = fmt(income);
     fundsMonthLabelEl.textContent = income > 0
-      ? monthLabel(current) + ' · Đã nhận diện tiền lương · Tổng tỷ lệ 100%'
+      ? monthLabel(current) + ' · Đã tự chia 4 quỹ' + (detectedFund ? ' · Đã chuyển ' + detectedFund.name : '')
       : monthLabel(current) + ' · Chưa có tiền lương được nhận diện';
     fundsListEl.innerHTML = FINANCE_FUNDS.map(function(fund, index){
-      return '<div class="fund-item ' + fund.key + '">' +
+      var isChecked = !!(saved && saved.selected && saved.selected[fund.key]);
+      var amount = saved && saved.amounts && Number.isFinite(Number(saved.amounts[fund.key]))
+        ? Number(saved.amounts[fund.key])
+        : distribution[fund.key];
+      return '<div class="fund-item ' + fund.key + (isChecked ? ' selected' : '') + '">' +
+        '<input class="fund-check" type="checkbox" data-fund-check="' + fund.key + '" aria-label="Trạng thái tự động của quỹ ' + escapeHtml(fund.name) + '" aria-readonly="true" tabindex="-1"' + (isChecked ? ' checked' : '') + '>' +
         '<div class="fund-app-badge">' + fund.badge + '</div>' +
         '<div><p class="fund-name">' + fund.name + '</p>' +
           '<p class="fund-meta">' + fund.code + ' · ' + fund.app + '<br>' + fund.purpose + '</p></div>' +
-        '<div class="fund-amount"><strong class="tnum">' + fmt(amounts[index]) + '</strong><span>' + fund.rate + '%</span></div>' +
+        '<div class="fund-amount"><label for="fundAmount-' + fund.key + '">Số tiền phân bổ · ' + fund.rate + '%</label>' +
+          '<div class="fund-amount-input"><input class="tnum" id="fundAmount-' + fund.key + '" data-fund-amount="' + fund.key + '" type="text" value="' + amount.toLocaleString('vi-VN') + '" readonly aria-readonly="true" tabindex="-1"><span>đ</span></div></div>' +
       '</div>';
     }).join('');
-    fundsRemainderEl.textContent = fmt(Math.max(0, income - allocated));
+    fundsListEl.setAttribute('data-base-amount', String(income));
+    calculateFundsRemainder();
   }
 
   function openFundsSheet(){
@@ -1601,11 +1717,65 @@
     return 'out';
   }
 
-  function extractAmount(rawText){
-    var m = rawText.match(/([+\-−])?\s?([\d]{1,3}(?:[.,]\d{3})+|\d{4,})\s?(?:vnd|đ|d\b)/i);
-    if(!m) return null;
-    var digits = m[2].replace(/[.,]/g,'');
+  function parseVndAmount(value){
+    var compact = String(value || '').replace(/\s/g,'').replace(/[^\d.,]/g,'');
+    if(!compact) return null;
+    if(/[.,]\d{2}$/.test(compact) && /[.,]/.test(compact.slice(0,-3))){
+      compact = compact.slice(0,-3);
+    }
+    var digits = compact.replace(/[^\d]/g,'');
     return parseInt(digits,10) || null;
+  }
+
+  function extractAmount(rawText){
+    var source = normalizeText(rawText || '');
+    var amount = '(?:\\d{1,3}(?:[.,\\s]\\d{3})+|\\d{4,})(?:[.,]\\d{2})?';
+    var patterns = [
+      new RegExp('(?:so tien(?: giao dich)?|tien gd|gia tri gd|amount)\\s*[:=]?\\s*[+\\-−]?\\s*(' + amount + ')\\s*(?:vnd|đ|d\\b)?','i'),
+      new RegExp('[+\\-−]\\s*(' + amount + ')\\s*(?:vnd|đ|d\\b)?','i'),
+      new RegExp('(?:vnd)\\s*(' + amount + ')','i'),
+      new RegExp('(' + amount + ')\\s*(?:vnd|đ|d\\b)','i')
+    ];
+    for(var i=0;i<patterns.length;i++){
+      var m = source.match(patterns[i]);
+      if(m){
+        var parsed = parseVndAmount(m[1]);
+        if(parsed) return parsed;
+      }
+    }
+    return null;
+  }
+
+  function containsFundAlias(normalizedText, alias){
+    var haystack = ' ' + normalizedText.replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim() + ' ';
+    var needle = normalizeText(alias).replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+    return needle && haystack.indexOf(' ' + needle + ' ') !== -1;
+  }
+
+  function findFinanceFundInText(normalized){
+    for(var i=0;i<FINANCE_FUNDS.length;i++){
+      for(var j=0;j<FINANCE_FUNDS[i].aliases.length;j++){
+        if(containsFundAlias(normalized, FINANCE_FUNDS[i].aliases[j])) return FINANCE_FUNDS[i];
+      }
+    }
+    return null;
+  }
+
+  function detectFinanceFund(rawText){
+    var normalized = normalizeText(rawText || '');
+    var contentPattern = /(?:noi dung(?: chuyen khoan| giao dich| ck)?|\bnd(?: ck)?\b|content|remark|dien giai)\s*[:\-]?\s*([^\n.;]{1,160})/g;
+    var contentMatch;
+    while((contentMatch = contentPattern.exec(normalized)) !== null){
+      var contentFund = findFinanceFundInText(contentMatch[1]);
+      if(contentFund) return contentFund;
+    }
+    var recipientPattern = /(?:tai khoan nhan|tk nhan|ngan hang nhan|vi nhan|nguoi nhan|chuyen(?: tien)? den|transfer to|to account)\s*[:\-]?\s*([^\n.;]{1,120})/g;
+    var recipientMatch;
+    while((recipientMatch = recipientPattern.exec(normalized)) !== null){
+      var recipientFund = findFinanceFundInText(recipientMatch[1]);
+      if(recipientFund) return recipientFund;
+    }
+    return null;
   }
 
   function extractDate(rawText){
@@ -1639,16 +1809,39 @@
       var amount = extractAmount(block);
       if(!amount) return;
       var type = guessType(block);
+      var salary = type === 'in' && isSalaryText(block);
+      var fund = salary ? null : detectFinanceFund(block);
       results.push({
         type: type,
         amount: amount,
         category: guessCategory(type, block),
         date: extractDate(block),
         note: extractNote(block),
-        sourceKey: messageKey(block)
+        sourceKey: messageKey(block),
+        isSalary: salary,
+        fundKey: fund ? fund.key : null,
+        fundRate: fund ? fund.rate : null,
+        fundTransferAmount: fund ? amount : null
       });
     });
     return results;
+  }
+
+  function rememberFundTransfer(item){
+    if(!item || item.isSalary || !item.fundKey || !item.amount) return;
+    var fund = getFinanceFund(item.fundKey);
+    if(!fund) return;
+    var monthKey = (item.date || todayStr()).slice(0,7);
+    var saved = getMonthFundState(monthKey, true);
+    saved.baseAmount = salaryForMonth(monthKey);
+    saved.amounts = calculateFundDistribution(saved.baseAmount);
+    if(!saved.selected) saved.selected = {};
+    saved.selected[fund.key] = true;
+    saved.detectedFundKey = fund.key;
+    saved.sourceKey = item.sourceKey || null;
+    if(!saved.transferAmounts) saved.transferAmounts = {};
+    saved.transferAmounts[fund.key] = item.amount;
+    saved.updatedAt = new Date().toISOString();
   }
 
   var smsBtn = document.getElementById('openSmsSheet');
@@ -1845,6 +2038,7 @@
       return Math.max(maxId, Number(t.id) || 0);
     }, 0) + 1);
 
+    var salaryMonths = {};
     fresh.forEach(function(it, idx){
       state.list.push({
         id: nextId + idx,
@@ -1853,10 +2047,20 @@
         category: it.category,
         note: it.note,
         date: it.date || todayStr(),
-        sourceKey: it.sourceKey
+        sourceKey: it.sourceKey,
+        isSalary: it.isSalary,
+        fundKey: it.fundKey,
+        fundRate: it.fundRate,
+        fundTransferAmount: it.fundTransferAmount
       });
+      if(it.isSalary) salaryMonths[(it.date || todayStr()).slice(0,7)] = true;
     });
+    Object.keys(salaryMonths).forEach(function(monthKey){
+      syncSalaryAllocation(monthKey, true);
+    });
+    fresh.forEach(rememberFundTransfer);
     save();
+    saveFundAllocationState();
     render();
     parsedItems = [];
     smsInput.value = '';

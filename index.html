@@ -433,6 +433,64 @@
     -webkit-user-select:none;
   }
 
+  .ocr-upload-wrap{ margin-top:0.85rem; }
+  #ocrImageInput{
+    position:absolute;
+    width:1px;
+    height:1px;
+    opacity:0;
+    pointer-events:none;
+  }
+  .ocr-upload-btn{
+    width:100%;
+    min-height:50px;
+    border:1.5px dashed #9BB8AB;
+    background:var(--forest-soft);
+    color:var(--forest);
+    border-radius:14px;
+    padding:0.78rem 0.85rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:0.55rem;
+    font-family:inherit;
+    font-weight:700;
+    font-size:0.88rem;
+    text-align:center;
+    cursor:pointer;
+  }
+  .ocr-upload-btn:active{ background:#D9EBE3; }
+  .ocr-upload-btn.is-disabled{
+    opacity:0.62;
+    cursor:wait;
+    pointer-events:none;
+  }
+  .ocr-upload-btn svg{ flex:0 0 auto; }
+  .ocr-status{
+    min-height:1.3rem;
+    margin:0.55rem 0 0;
+    color:var(--ink-soft);
+    font-size:0.78rem;
+    line-height:1.45;
+    text-align:center;
+  }
+  .ocr-status[hidden]{ display:none; }
+  .ocr-status.is-loading::before{
+    content:'';
+    display:inline-block;
+    width:12px;
+    height:12px;
+    margin-right:0.42rem;
+    border:2px solid #BDD2C8;
+    border-top-color:var(--forest);
+    border-radius:50%;
+    vertical-align:-2px;
+    animation:ocr-spin 0.75s linear infinite;
+  }
+  .ocr-status.is-error{ color:var(--rust); }
+  .ocr-status.is-success{ color:var(--forest); }
+  @keyframes ocr-spin{ to{ transform:rotate(360deg); } }
+
   .parse-btn{
     width:100%;
     border:1.5px solid var(--forest);
@@ -1235,10 +1293,19 @@
     <h2>Nhập từ tin nhắn ngân hàng</h2>
     <button class="sheet-close" id="closeSmsSheetBtn" type="button" aria-label="Đóng bảng nhập tin nhắn"><span class="sheet-close-icon" aria-hidden="true">&times;</span><span>Đóng</span></button>
   </div>
-  <p class="hint-text">Sao chép nội dung tin nhắn/thông báo biến động số dư rồi mở mục này — app sẽ tự đọc, phân tích và lưu thẳng vào sổ mà không bật bàn phím. Nếu chưa nhận được, chạm nút đọc lại bên dưới.</p>
+  <p class="hint-text">Sao chép nội dung thông báo hoặc chọn ảnh chụp giao dịch. Ứng dụng sẽ bóc tách số tiền, nội dung và danh mục rồi lưu vào sổ.</p>
 
   <div class="field">
     <textarea id="smsInput" rows="6" readonly inputmode="none" aria-readonly="true" placeholder="Nội dung đã sao chép sẽ tự xuất hiện ở đây"></textarea>
+  </div>
+
+  <div class="ocr-upload-wrap">
+    <label class="ocr-upload-btn" id="ocrUploadButton" for="ocrImageInput">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 016.5 5h1.2l1.1-1.5h6.4L16.3 5h1.2A2.5 2.5 0 0120 7.5v9a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 16.5v-9z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.8"/></svg>
+      <span>Tải ảnh / Chụp ảnh màn hình giao dịch</span>
+    </label>
+    <input id="ocrImageInput" type="file" accept="image/*">
+    <p class="ocr-status" id="ocrStatus" role="status" aria-live="polite" hidden></p>
   </div>
 
   <button class="parse-btn" id="parseBtn">Đọc lại nội dung đã sao chép</button>
@@ -1275,6 +1342,7 @@
   <p class="funds-note">Khi nhận diện tiền lương, ứng dụng tự chia đủ 4 quỹ theo tỷ lệ. Sau đó, thông báo chuyển tiền có trường Nội dung, ND, Content hoặc Diễn giải sẽ tự đánh dấu quỹ tương ứng. Dấu tích và số tiền đều được cập nhật tự động, không cần nhập thủ công.</p>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
 (function(){
   "use strict";
@@ -1283,7 +1351,7 @@
   var FUND_STATE_KEY = "soChiTieu_fundAllocations_v2";
 
   var CATS = {
-    in:  ["Lương", "Thưởng", "Đầu tư", "Bán đồ", "Khác"],
+    in:  ["Lương / Thu nhập", "Thưởng", "Đầu tư", "Bán đồ", "Khác"],
     out: [
       "Ăn uống", "Đi chợ / Siêu thị", "Di chuyển", "Nhà ở", "Hóa đơn & tiện ích",
       "Sức khỏe", "Giáo dục", "Con cái", "Gia đình & hiếu hỉ", "Bảo hiểm",
@@ -1654,9 +1722,20 @@
 
   // ---------- Nhập từ tin nhắn ngân hàng (dán văn bản, tự nhận diện) ----------
   function normalizeText(s){
-    return s.toString().toLowerCase()
+    return String(s || '').toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-      .replace(/đ/g,'d');
+      .replace(/[đð]/g,'d')
+      .replace(/[−–—]/g,'-');
+  }
+
+  function normalizeWords(s){
+    return normalizeText(s).replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+  }
+
+  function containsKeyword(text, keyword){
+    var haystack = ' ' + normalizeWords(text) + ' ';
+    var needle = normalizeWords(keyword);
+    return !!needle && haystack.indexOf(' ' + needle + ' ') !== -1;
   }
 
   function isSalaryText(rawText){
@@ -1666,23 +1745,25 @@
   }
 
   function isSalaryTransaction(transaction){
-    return !!transaction && transaction.type === 'in' &&
-      (transaction.category === 'Lương' || isSalaryText(transaction.note || ''));
+    if(!transaction || transaction.type !== 'in') return false;
+    if(transaction.isSalary === true) return true;
+    if(transaction.isSalary === false) return false;
+    return transaction.category === 'Lương' || transaction.category === 'Lương / Thu nhập' || isSalaryText(transaction.note || '');
   }
 
   var CAT_KEYWORDS_OUT = [
-    { cat:"Ăn uống", kw:["an uong","quan an","nha hang","cafe","ca phe","tra sua","com ","pho ","bun ","kfc","lotteria","highlands","phuc long","starbucks"] },
-    { cat:"Đi chợ / Siêu thị", kw:["sieu thi","vinmart","winmart","bach hoa","coopmart","big c","bachhoaxanh","circle k","ministop","satra","co.opmart"] },
-    { cat:"Di chuyển", kw:["grab","be group","taxi","xang dau","xang xe","xe bus","gara","garage","mai linh","xanh sm","gojek"] },
-    { cat:"Nhà ở", kw:["thue nha","tien nha","sua chua nha","noi that"] },
-    { cat:"Hóa đơn & tiện ích", kw:["dien luc","evn","tien dien","tien nuoc","fpt telecom","vnpt","viettel","hoa don","cuoc phi","wifi","internet"] },
+    { cat:"Hóa đơn & tiện ích", kw:["tien dien","dien","dien luc","evn","tien nuoc","nuoc","mang","wifi","internet","truyen hinh","tien nha","phong tro","tien phong","rac","tien rac","fpt telecom","vnpt","viettel","hoa don","cuoc phi"] },
+    { cat:"Ăn uống", kw:["an","an uong","an trua","an sang","an toi","com","pho","bun","tra sua","cafe","coffee","ca phe","highlands","phuc long","nha hang","quan an","baemin","shopeefood","grabfood","kfc","lotteria","starbucks"] },
+    { cat:"Đi chợ / Siêu thị", kw:["di cho","sieu thi","vinmart","winmart","bach hoa","coopmart","big c","bachhoaxanh","circle k","ministop","satra","co opmart"] },
+    { cat:"Di chuyển", kw:["grab","be group","be bike","be car","dat xe be","cuoc be","xanh sm","taxi","xang","do xang","xang dau","xang xe","gui xe","ve xe","xe bus","gara","garage","mai linh","gojek"] },
+    { cat:"Mua sắm", kw:["ban cao rau","mua","mua sam","shop","shopee","lazada","tiki","sendo","quan ao","giay","giay dep","winmart","coopmart","sieu thi"] },
+    { cat:"Nhà ở", kw:["thue nha","sua chua nha","noi that"] },
     { cat:"Sức khỏe", kw:["benh vien","nha thuoc","phong kham","pharmacy","kham benh","clinic","thuoc "] },
     { cat:"Giáo dục", kw:["hoc phi","truong hoc","sach vo","anh ngu","khoa hoc"] },
     { cat:"Con cái", kw:["bim sua","sua bot","do choi tre em","mam non"] },
     { cat:"Gia đình & hiếu hỉ", kw:["dam cuoi","dam tang","mung cuoi","bieu qua","tang qua"] },
     { cat:"Bảo hiểm", kw:["bao hiem","bhyt","bhxh","insurance"] },
-    { cat:"Trả nợ / Vay", kw:["tra no","tra gop","khoan vay","lai suat vay","credit"] },
-    { cat:"Mua sắm", kw:["shopee","lazada","tiki","sendo","quan ao","giay dep","mua sam"] },
+    { cat:"Trả nợ / Vay", kw:["tra gop","khoan vay","lai suat vay","credit"] },
     { cat:"Làm đẹp", kw:["spa","salon","cat toc","lam mong","my pham","nail"] },
     { cat:"Giải trí", kw:["cinema","cgv","lotte cinema","netflix","spotify","du lich","karaoke","xem phim"] },
     { cat:"Thú cưng", kw:["pet shop","thu cung","thuc an cho meo","thuc an cho cho"] },
@@ -1690,19 +1771,18 @@
   ];
 
   var CAT_KEYWORDS_IN = [
-    { cat:"Lương", kw:["luong","tien luong","luong thang","tra luong","chi luong","nhan luong","salary","payroll","wage"] },
-    { cat:"Thưởng", kw:["thuong","bonus"] },
+    { cat:"Lương / Thu nhập", kw:["luong","tien luong","luong thang","ung luong","tra luong","chi luong","nhan luong","salary","payroll","wage","thuong","bonus","thu no","tra no"] },
     { cat:"Đầu tư", kw:["co tuc","loi nhuan","lai suat tiet kiem","dividend"] },
     { cat:"Bán đồ", kw:["ban hang","ban do","thanh ly"] }
   ];
 
   function guessCategory(type, rawText){
-    if(type === 'in' && isSalaryText(rawText)) return "Lương";
-    var t = normalizeText(rawText);
+    if(type === 'in' && isSalaryText(rawText)) return "Lương / Thu nhập";
+    if(type === 'out' && normalizeWords(rawText) === 'be') return "Di chuyển";
     var list = type === 'in' ? CAT_KEYWORDS_IN : CAT_KEYWORDS_OUT;
     for(var i=0;i<list.length;i++){
       for(var j=0;j<list[i].kw.length;j++){
-        if(t.indexOf(list[i].kw[j]) !== -1) return list[i].cat;
+        if(containsKeyword(rawText, list[i].kw[j])) return list[i].cat;
       }
     }
     return "Khác";
@@ -1710,16 +1790,29 @@
 
   function guessType(rawText){
     var t = normalizeText(rawText);
-    if(/[+]\s?[\d.,]+\s?(vnd|d\b)/.test(t)) return 'in';
-    if(/[\-−]\s?[\d.,]+\s?(vnd|d\b)/.test(t)) return 'out';
+    if(/\bgd\s*[:=]?\s*\+\s*\d/.test(t)) return 'in';
+    if(/\bgd\s*[:=]?\s*-\s*\d/.test(t)) return 'out';
+    if(/(?:\bgd\b|giao dich|so tien|amount)?\s*[:=]?\s*\+\s*\d[\d.,\s]*(?:vnd|d\b)/.test(t)) return 'in';
+    if(/(?:\bgd\b|giao dich|so tien|amount)?\s*[:=]?\s*-\s*\d[\d.,\s]*(?:vnd|d\b)/.test(t)) return 'out';
     if(isSalaryText(rawText)) return 'in';
-    if(/(ghi co|nhan tien|cong tien|chuyen khoan den|nap tien)/.test(t)) return 'in';
+    if(/(^|[^a-z0-9])(thuong|bonus|thu no|tra no)([^a-z0-9]|$)/.test(t)) return 'in';
+    if(/(ghi co|nhan tien|tien vao|cong tien|chuyen khoan den|duoc chuyen tien|nap tien|cashback|hoan tien)/.test(t)) return 'in';
+    if(/(ghi no|thanh toan|chuyen tien thanh cong|da chuyen tien|mua hang|rut tien|tien ra)/.test(t)) return 'out';
     return 'out';
   }
 
   function parseVndAmount(value){
     var compact = String(value || '').replace(/\s/g,'').replace(/[^\d.,]/g,'');
     if(!compact) return null;
+    if(/[.,]\d{2}$/.test(compact)){
+      var integerPart = compact.slice(0,-3).replace(/[^\d]/g,'');
+      if(integerPart.length >= 3){
+        compact = compact.slice(0,-3);
+      }
+    }
+    if(/[.,]\d{1,2}$/.test(compact) && !/[.,]/.test(compact.slice(0,-3)) && compact.replace(/[^\d]/g,'').length <= 3){
+      return Math.round(parseFloat(compact.replace(',','.')) || 0) || null;
+    }
     if(/[.,]\d{2}$/.test(compact) && /[.,]/.test(compact.slice(0,-3))){
       compact = compact.slice(0,-3);
     }
@@ -1727,14 +1820,30 @@
     return parseInt(digits,10) || null;
   }
 
+  function parseHumanAmount(value){
+    var t = normalizeText(value || '');
+    var m = t.match(/(?:^|\s)(\d{1,3})\s*(?:tr|trieu)\s*(\d{1,3})(?=$|\s|[^a-z0-9])/i);
+    if(m){
+      var tail = m[2];
+      var tailValue = parseInt(tail,10) * Math.pow(10, 6 - tail.length);
+      return parseInt(m[1],10) * 1000000 + tailValue;
+    }
+    m = t.match(/(?:^|\s)(\d+(?:[.,]\d+)?)\s*(?:tr|trieu|m)(?=$|\s|[^a-z0-9])/i);
+    if(m) return Math.round(parseFloat(m[1].replace(',','.')) * 1000000) || null;
+    m = t.match(/(?:^|\s)(\d+(?:[.,]\d+)?)\s*(?:k|nghin|ngan)(?=$|\s|[^a-z0-9])/i);
+    if(m) return Math.round(parseFloat(m[1].replace(',','.')) * 1000) || null;
+    m = t.match(/(?:^|\s)(\d{1,3}(?:[.,\s]\d{3})+|\d{5,12})(?=$|\s|[^\d])/);
+    return m ? parseVndAmount(m[1]) : null;
+  }
+
   function extractAmount(rawText){
     var source = normalizeText(rawText || '');
-    var amount = '(?:\\d{1,3}(?:[.,\\s]\\d{3})+|\\d{4,})(?:[.,]\\d{2})?';
+    var amount = '(?:\\d{1,3}(?:[., \\t]\\d{3})+|\\d{4,12})(?:[.,]\\d{2})?';
     var patterns = [
-      new RegExp('(?:so tien(?: giao dich)?|tien gd|gia tri gd|amount)\\s*[:=]?\\s*[+\\-−]?\\s*(' + amount + ')\\s*(?:vnd|đ|d\\b)?','i'),
-      new RegExp('[+\\-−]\\s*(' + amount + ')\\s*(?:vnd|đ|d\\b)?','i'),
+      new RegExp('(?:\\bgd\\b|giao dich|so tien(?: giao dich)?|tien gd|gia tri gd|amount)\\s*[:=]?\\s*[+\\-]?\\s*(' + amount + ')\\s*(?:vnd|d\\b)?','i'),
+      new RegExp('[+\\-]\\s*(' + amount + ')\\s*(?:vnd|d\\b)','i'),
       new RegExp('(?:vnd)\\s*(' + amount + ')','i'),
-      new RegExp('(' + amount + ')\\s*(?:vnd|đ|d\\b)','i')
+      new RegExp('(' + amount + ')\\s*(?:vnd|d\\b)','i')
     ];
     for(var i=0;i<patterns.length;i++){
       var m = source.match(patterns[i]);
@@ -1742,6 +1851,14 @@
         var parsed = parseVndAmount(m[1]);
         if(parsed) return parsed;
       }
+    }
+    var lines = String(rawText || '').split(/\r?\n/);
+    for(var j=0;j<lines.length;j++){
+      var lineWords = normalizeWords(lines[j]);
+      if(!/[a-z]/.test(lineWords)) continue;
+      if(/^(sd|so du|ma giao dich|ma tham chieu|reference|ref|tai khoan|tk)\b/.test(lineWords)) continue;
+      var humanAmount = parseHumanAmount(lines[j]);
+      if(humanAmount) return humanAmount;
     }
     return null;
   }
@@ -1779,6 +1896,8 @@
   }
 
   function extractDate(rawText){
+    var iso = rawText.match(/(20\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if(iso) return iso[1]+'-'+iso[2].padStart(2,'0')+'-'+iso[3].padStart(2,'0');
     var m = rawText.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
     if(!m) return todayStr();
     var d = m[1].padStart(2,'0'), mo = m[2].padStart(2,'0'), y = m[3];
@@ -1786,10 +1905,117 @@
     return y+'-'+mo+'-'+d;
   }
 
-  function extractNote(rawText){
-    var m = rawText.match(/(?:noi dung|nd|content)[:\s]+(.+)/i);
-    if(m) return m[1].trim().slice(0,80);
-    return rawText.replace(/\s+/g,' ').trim().slice(0,70);
+  function cutAtNextField(value){
+    return String(value || '').split(/\s+(?=(?:sd|số dư|so du|gd|giao dịch|giao dich|mã giao dịch|ma giao dich|thời gian|thoi gian|ngày|ngay|phí|phi|ref|reference|tài khoản|tai khoan|tk)\s*[:=])/i)[0];
+  }
+
+  function cleanDescription(value){
+    var cleaned = cutAtNextField(value)
+      .replace(/^[\s:;|,.\-–—]+|[\s:;|,.\-–—]+$/g,'')
+      .replace(/^["“”']+|["“”']+$/g,'')
+      .replace(/\s+/g,' ')
+      .trim();
+    return cleaned.slice(0,160);
+  }
+
+  function extractFieldValue(rawText, labels){
+    var lines = String(rawText || '').replace(/\r/g,'').split('\n');
+    for(var i=0;i<lines.length;i++){
+      var line = lines[i].trim();
+      for(var j=0;j<labels.length;j++){
+        var match = line.match(labels[j]);
+        if(match && cleanDescription(match[1])) return cleanDescription(match[1]);
+      }
+    }
+    var inline = String(rawText || '').replace(/\r?\n/g,' | ');
+    for(var k=0;k<labels.length;k++){
+      var inlineMatch = inline.match(labels[k]);
+      if(inlineMatch && cleanDescription(inlineMatch[1])) return cleanDescription(inlineMatch[1]);
+    }
+    return '';
+  }
+
+  function extractNextLineValue(rawText, fieldNames){
+    var lines = String(rawText || '').replace(/\r/g,'').split('\n');
+    for(var i=0;i<lines.length - 1;i++){
+      if(fieldNames.indexOf(normalizeWords(lines[i])) === -1) continue;
+      var candidate = cleanDescription(lines[i + 1]);
+      if(candidate) return candidate;
+    }
+    return '';
+  }
+
+  var NOTE_LABELS = [
+    /(?:^|[\s;|])(?:nội\s*dung(?:\s*(?:chuyển\s*khoản|giao\s*dịch))?|noi\s*dung(?:\s*(?:chuyen\s*khoan|giao\s*dich))?|nd(?:\s*ck)?|content|diễn\s*giải|dien\s*giai|lời\s*nhắn|loi\s*nhan|remark|message)\s*[:=\-]\s*([^;|\n]+)/i,
+    /(?:^|[\s;|])ref(?:erence)?\b(?:\s*(?:no|number|id))?\s*[:=#\-]?\s*(?:(?=[A-Z0-9]*\d)[A-Z0-9]{6,}\s*[-:]?\s+)?([^;|\n]+)/i
+  ];
+
+  var PARTY_LABELS = [
+    /(?:^|[\s;|])(?:tên\s*người\s*nhận|ten\s*nguoi\s*nhan|người\s*nhận|nguoi\s*nhan|chuyển\s*(?:tiền\s*)?đến|chuyen\s*(?:tien\s*)?den|thanh\s*toán\s*cho|thanh\s*toan\s*cho|cửa\s*hàng|cua\s*hang|nhà\s*cung\s*cấp|nha\s*cung\s*cap|dịch\s*vụ|dich\s*vu|đối\s*tác|doi\s*tac|merchant|recipient|transfer\s*to)\s*[:=\-]\s*([^;|\n]+)/i
+  ];
+
+  function removeAmountFromLine(line){
+    return cleanDescription(String(line || '')
+      .replace(/[+\-−]?\s*\d{1,3}(?:[.,\s]\d{3})+(?:[.,]\d{2})?\s*(?:vnd|đ|d\b)?/gi,' ')
+      .replace(/[+\-−]?\s*\d{4,12}(?:[.,]\d{2})?\s*(?:vnd|đ|d\b)?/gi,' ')
+      .replace(/\d+(?:[.,]\d+)?\s*(?:tr(?:iệu)?|triệu|k|nghìn|ngàn|m)\s*\d{0,3}/gi,' ')
+      .replace(/\b(?:vnd|vnđ|đồng)\b/gi,' '));
+  }
+
+  function isBoilerplateLine(line){
+    var t = normalizeWords(line);
+    if(!t) return true;
+    if(/^(vietinbank|vietin bank|vietinbank ipay|ipay|momo|zalopay|zalo pay)$/.test(t)) return true;
+    if(/^(giao dich|chi tiet giao dich|thong tin giao dich|bien dong so du|thanh toan thanh cong|giao dich thanh cong|chuyen tien thanh cong|da chuyen tien|thanh cong)$/.test(t)) return true;
+    if(/^(ma giao dich|ma tham chieu|reference|ref|so du|sd|tai khoan|tk|nguon tien|phi|thoi gian|ngay)\b/.test(t)) return true;
+    if(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}(?:\s+\d{1,2}:\d{2})?$/.test(t)) return true;
+    return false;
+  }
+
+  function extractNote(rawText, type){
+    var explicit = extractFieldValue(rawText, NOTE_LABELS);
+    if(explicit) return explicit;
+
+    var nextLineNote = extractNextLineValue(rawText, [
+      'noi dung','noi dung chuyen khoan','noi dung giao dich','nd','nd ck','content',
+      'dien giai','loi nhan','remark','message','ref','reference'
+    ]);
+    if(nextLineNote) return nextLineNote;
+
+    var party = extractFieldValue(rawText, PARTY_LABELS);
+    if(party) return party;
+
+    var nextLineParty = extractNextLineValue(rawText, [
+      'ten nguoi nhan','nguoi nhan','chuyen den','chuyen tien den','thanh toan cho',
+      'cua hang','nha cung cap','dich vu','doi tac','merchant','recipient','transfer to'
+    ]);
+    if(nextLineParty) return nextLineParty;
+
+    var lines = String(rawText || '').replace(/\r/g,'').split('\n').map(function(line){ return line.trim(); }).filter(Boolean);
+    for(var i=0;i<lines.length;i++){
+      if(!extractAmount(lines[i])) continue;
+      var shorthand = removeAmountFromLine(lines[i]);
+      if(shorthand && /[A-Za-zÀ-ỹ]/.test(shorthand) && !isBoilerplateLine(shorthand)) return shorthand;
+    }
+    for(var j=0;j<lines.length;j++){
+      if(isBoilerplateLine(lines[j])) continue;
+      var candidate = removeAmountFromLine(lines[j]);
+      if(candidate && /[A-Za-zÀ-ỹ]/.test(candidate) && !isBoilerplateLine(candidate)) return candidate;
+    }
+    return type === 'in' ? 'Giao dịch thu' : 'Giao dịch chi';
+  }
+
+  function splitMessageBlocks(text){
+    var source = String(text || '').replace(/\r/g,'').trim();
+    if(!source) return [];
+    var separated = source.split(/\n\s*(?:-{3,}|={3,})\s*\n/).map(function(part){ return part.trim(); }).filter(Boolean);
+    if(separated.length > 1) return separated;
+    var paragraphs = source.split(/\n\s*\n+/).map(function(part){ return part.trim(); }).filter(Boolean);
+    var transactionParagraphCount = paragraphs.filter(function(part){
+      var t = normalizeText(part);
+      return !!extractAmount(part) && /(gd|giao dich|so tien|amount|thanh toan|chuyen tien|nhan tien|vnd|đ|\d\s*(?:k|tr|trieu))/.test(t);
+    }).length;
+    return transactionParagraphCount > 1 ? paragraphs : [source];
   }
 
   function messageKey(rawText){
@@ -1803,20 +2029,21 @@
   }
 
   function parseMessages(text){
-    var blocks = text.split(/\n\s*\n/).map(function(b){return b.trim();}).filter(Boolean);
+    var blocks = splitMessageBlocks(text);
     var results = [];
     blocks.forEach(function(block){
       var amount = extractAmount(block);
       if(!amount) return;
       var type = guessType(block);
+      var note = extractNote(block, type);
       var salary = type === 'in' && isSalaryText(block);
       var fund = salary ? null : detectFinanceFund(block);
       results.push({
         type: type,
         amount: amount,
-        category: guessCategory(type, block),
+        category: guessCategory(type, note),
         date: extractDate(block),
-        note: extractNote(block),
+        note: note || (type === 'in' ? 'Giao dịch thu' : 'Giao dịch chi'),
         sourceKey: messageKey(block),
         isSalary: salary,
         fundKey: fund ? fund.key : null,
@@ -1852,9 +2079,92 @@
   var parsedResultsEl = document.getElementById('parsedResults');
   var autoToast = document.getElementById('autoToast');
   var closeSmsSheetBtn = document.getElementById('closeSmsSheetBtn');
+  var ocrImageInput = document.getElementById('ocrImageInput');
+  var ocrUploadButton = document.getElementById('ocrUploadButton');
+  var ocrStatus = document.getElementById('ocrStatus');
   var parsedItems = [];
   var smsSessionToken = 0;
   var toastTimer = null;
+  var ocrWorkerPromise = null;
+  var ocrWorker = null;
+  var ocrBusy = false;
+
+  function setOcrStatus(message, stateName){
+    ocrStatus.textContent = message || '';
+    ocrStatus.hidden = !message;
+    ocrStatus.className = 'ocr-status' + (stateName ? ' is-' + stateName : '');
+  }
+
+  function setOcrBusy(isBusy){
+    ocrBusy = isBusy;
+    ocrImageInput.disabled = isBusy;
+    parseBtn.disabled = isBusy;
+    ocrUploadButton.classList.toggle('is-disabled', isBusy);
+    ocrUploadButton.setAttribute('aria-disabled', isBusy ? 'true' : 'false');
+  }
+
+  function ocrProgressLogger(message){
+    if(!ocrBusy) return;
+    var percent = typeof message.progress === 'number' ? ' ' + Math.round(message.progress * 100) + '%' : '';
+    setOcrStatus('Đang quét chữ từ ảnh...' + percent, 'loading');
+  }
+
+  function getOcrWorker(){
+    if(!window.Tesseract || typeof window.Tesseract.createWorker !== 'function'){
+      return Promise.reject(new Error('Không tải được thư viện OCR'));
+    }
+    if(!ocrWorkerPromise){
+      ocrWorkerPromise = window.Tesseract.createWorker(['vie','eng'], 1, {
+        logger: ocrProgressLogger
+      }).then(function(worker){
+        ocrWorker = worker;
+        return worker;
+      }).catch(function(error){
+        ocrWorkerPromise = null;
+        ocrWorker = null;
+        throw error;
+      });
+    }
+    return ocrWorkerPromise;
+  }
+
+  function scanTransactionImage(file){
+    if(!file || ocrBusy) return;
+    if(!/^image\//i.test(file.type || '')){
+      setOcrStatus('Tệp đã chọn không phải là ảnh.', 'error');
+      return;
+    }
+    var token = smsSessionToken;
+    setOcrBusy(true);
+    setOcrStatus('Đang quét chữ từ ảnh...', 'loading');
+    parsedItems = [];
+    parsedResultsEl.innerHTML = '';
+
+    getOcrWorker().then(function(worker){
+      return worker.recognize(file);
+    }).then(function(result){
+      if(token !== smsSessionToken || !smsSheetEl.classList.contains('show')) return;
+      var recognizedText = result && result.data ? String(result.data.text || '').trim() : '';
+      smsInput.value = recognizedText;
+      if(!recognizedText){
+        setOcrStatus('Không đọc được chữ trong ảnh. Hãy chọn ảnh rõ và không bị cắt mất số tiền.', 'error');
+        showClipboardMessage('OCR không tìm thấy nội dung để phân tích.');
+        return;
+      }
+      setOcrStatus('Đã quét xong. Đang bóc tách giao dịch...', 'success');
+      runParse(recognizedText);
+      if(parsedItems.length === 0 && smsSheetEl.classList.contains('show')){
+        setOcrStatus('Đã đọc được chữ nhưng chưa nhận diện được số tiền giao dịch.', 'error');
+      }
+    }).catch(function(){
+      if(token !== smsSessionToken) return;
+      setOcrStatus('Không thể quét ảnh. Kiểm tra kết nối mạng rồi thử lại.', 'error');
+      showClipboardMessage('OCR chưa hoạt động. Ảnh và nội dung giao dịch không được lưu.');
+    }).finally(function(){
+      setOcrBusy(false);
+      ocrImageInput.value = '';
+    });
+  }
 
   function runParse(text){
     var found = parseMessages(text);
@@ -1902,6 +2212,8 @@
     if(document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
     var token = ++smsSessionToken;
     smsInput.value = '';
+    ocrImageInput.value = '';
+    setOcrStatus('', '');
     parsedItems = [];
     parsedResultsEl.innerHTML = '';
     smsBackdrop.classList.add('show');
@@ -1918,6 +2230,18 @@
   smsBtn.addEventListener('click', openSmsSheet);
   smsBackdrop.addEventListener('click', closeSmsSheet);
   closeSmsSheetBtn.addEventListener('click', closeSmsSheet);
+
+  ocrImageInput.addEventListener('change', function(){
+    scanTransactionImage(ocrImageInput.files && ocrImageInput.files[0]);
+  });
+
+  window.addEventListener('pagehide', function(){
+    if(ocrWorker && typeof ocrWorker.terminate === 'function'){
+      ocrWorker.terminate();
+      ocrWorker = null;
+      ocrWorkerPromise = null;
+    }
+  });
 
   smsInput.addEventListener('focus', function(){
     smsInput.blur();
